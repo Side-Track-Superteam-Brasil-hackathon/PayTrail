@@ -1,0 +1,25 @@
+{
+  "name": "paytrail-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PayTrail end-to-end runner (specs/05 A1-A9), watcher smoke test and localnet helpers. tools/demo uses these dependencies.",
+  "scripts": {
+    "e2e": "tsx src/run.ts",
+    "ensure-mint": "tsx src/ensure-mint.ts",
+    "watcher-smoke": "tsx src/watcher-smoke.ts",
+    "demo:pay": "tsx ../demo/pay.ts",
+    "demo:fund": "tsx ../demo/fund.ts",
+    "demo:keygen": "tsx ../demo/keygen.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@solana/spl-token": "0.4.9",
+    "@solana/web3.js": "1.95.4"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.6",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3"
+  }
+}
