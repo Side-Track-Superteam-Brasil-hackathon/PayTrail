@@ -47,3 +47,12 @@ export function formatBrl(v: string | number): string {
 export function formatFee(amount: string, currency: 'BRL' | 'USDC'): string {
   return currency === 'BRL' ? formatBrl(amount) : `${amount} USDC`;
 }
+
+/** Chat timestamp: time only for today, otherwise short date + time. */
+export function formatMessageTime(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (d.toDateString() === now.toDateString()) return time;
+  return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${time}`;
+}

@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CheckCircle, ExternalLink, Link2 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { Invoice, Payment } from '../../api/types';
+import { Alert } from '../../components/Alert';
+import { Button } from '../../components/Button';
+import { EmptyState } from '../../components/EmptyState';
+import { inputBase } from '../../components/Field';
+import { Loading } from '../../components/Loading';
+import { PageHeader } from '../../components/PageHeader';
+import { Pill } from '../../components/Pill';
+import { TBody, THead, Table, Td, Th } from '../../components/Table';
 import { errorMessage, formatDateTime, formatExact, humanize, shortAddr } from './format';
-import './finance.css';
 
 export function UnmatchedPage() {
   const [payments, setPayments] = useState<Payment[] | null>(null);
@@ -50,63 +58,84 @@ export function UnmatchedPage() {
   };
 
   return (
-    <div className="fin-stack">
-      <div className="fin-head"><h1>Unmatched payments</h1></div>
-      <p className="muted" style={{ marginTop: 0 }}>
-        Payments received on your wallet that could not be linked to an invoice automatically. Match them manually.
-      </p>
-      {error && <div className="fin-alert-error">{error}</div>}
-      {notice && <div className="fin-ok">{notice}</div>}
-      {!payments && !error && <p className="muted">Loading…</p>}
+    <div className="space-y-6">
+      <PageHeader
+        title="Unmatched payments"
+        subtitle="Payments received on your wallet that could not be linked to an invoice automatically. Match them manually."
+      />
+      {error && <Alert>{error}</Alert>}
+      {notice && <Alert tone="success">{notice}</Alert>}
+      {!payments && !error && <Loading />}
 
       {payments && payments.length === 0 && (
-        <div className="card fin-empty">
-          <h3>All caught up</h3>
-          <p className="muted">There are no unmatched payments.</p>
-        </div>
+        <EmptyState icon={<CheckCircle size={26} />} title="All caught up">
+          There are no unmatched payments.
+        </EmptyState>
       )}
 
       {payments && payments.length > 0 && (
-        <div className="card fin-table-wrap">
-          <table className="fin-table">
-            <thead>
-              <tr><th className="num">USDC</th><th>From</th><th>Time</th><th>Reason</th><th>Tx</th><th>Match to invoice</th></tr>
-            </thead>
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p.id}>
-                  <td className="num"><strong>{formatExact(p.amount)}</strong></td>
-                  <td className="fin-mono">{shortAddr(p.fromAddress)}</td>
-                  <td>{formatDateTime(p.blockTime)}</td>
-                  <td>
-                    <span className="fin-badge">{p.status === 'AMBIGUOUS' ? 'Ambiguous' : 'Unmatched'}</span>{' '}
-                    <span className="muted">{p.unmatchedReason ? humanize(p.unmatchedReason) : ''}</span>
-                  </td>
-                  <td>{p.explorerUrl ? <a href={p.explorerUrl} target="_blank" rel="noreferrer">{shortAddr(p.txHash)} ↗</a> : shortAddr(p.txHash)}</td>
-                  <td>
-                    <div className="fin-row" style={{ flexWrap: 'nowrap' }}>
-                      <select
-                        value={selected[p.id!] ?? ''}
-                        onChange={(e) => setSelected((s) => ({ ...s, [p.id!]: e.target.value }))}
-                        aria-label="Invoice"
-                        style={{ minWidth: 0, maxWidth: 220 }}
-                      >
-                        <option value="">Select invoice…</option>
-                        {invoices.map((i) => (
-                          <option key={i.id} value={i.id}>{i.clientName} — {i.description} ({formatExact(i.balance)} due)</option>
-                        ))}
-                      </select>
-                      <button disabled={!selected[p.id!] || busyId === p.id} onClick={() => void match(p)}>
-                        {busyId === p.id ? '…' : 'Match'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {invoices.length === 0 && <p className="muted">No open invoices to match to. <Link to="/invoices/new">Create one</Link>.</p>}
-        </div>
+        <Table
+          footer={
+            invoices.length === 0 && (
+              <p className="px-6 py-4 text-sm text-slate-500 border-t border-slate-100">
+                No open invoices to match to.{' '}
+                <Link to="/invoices/new" className="font-medium text-indigo-600 hover:text-indigo-800">Create one</Link>.
+              </p>
+            )
+          }
+        >
+          <THead>
+            <Th num>USDC</Th><Th>From</Th><Th>Time</Th><Th>Reason</Th><Th>Tx</Th><Th>Match to invoice</Th>
+          </THead>
+          <TBody>
+            {payments.map((p) => (
+              <tr key={p.id} className="hover:bg-slate-50/50">
+                <Td num className="font-semibold text-slate-900">{formatExact(p.amount)}</Td>
+                <Td className="font-mono text-xs">{shortAddr(p.fromAddress)}</Td>
+                <Td className="whitespace-nowrap">{formatDateTime(p.blockTime)}</Td>
+                <Td>
+                  <div className="flex flex-col items-start gap-1">
+                    <Pill tone={p.status === 'AMBIGUOUS' ? 'violet' : 'amber'}>
+                      {p.status === 'AMBIGUOUS' ? 'Ambiguous' : 'Unmatched'}
+                    </Pill>
+                    {p.unmatchedReason && <span className="text-xs text-slate-500">{humanize(p.unmatchedReason)}</span>}
+                  </div>
+                </Td>
+                <Td>
+                  {p.explorerUrl ? (
+                    <a href={p.explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">
+                      {shortAddr(p.txHash)} <ExternalLink size={14} />
+                    </a>
+                  ) : shortAddr(p.txHash)}
+                </Td>
+                <Td>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selected[p.id!] ?? ''}
+                      onChange={(e) => setSelected((s) => ({ ...s, [p.id!]: e.target.value }))}
+                      aria-label="Invoice"
+                      className={`${inputBase} px-3 py-2 text-sm w-56`}
+                    >
+                      <option value="">Select invoice…</option>
+                      {invoices.map((i) => (
+                        <option key={i.id} value={i.id}>{i.clientName} — {i.description} ({formatExact(i.balance)} due)</option>
+                      ))}
+                    </select>
+                    <Button
+                      size="sm"
+                      variant="accent"
+                      disabled={!selected[p.id!] || busyId === p.id}
+                      onClick={() => void match(p)}
+                      icon={<Link2 size={16} />}
+                    >
+                      {busyId === p.id ? '…' : 'Match'}
+                    </Button>
+                  </div>
+                </Td>
+              </tr>
+            ))}
+          </TBody>
+        </Table>
       )}
     </div>
   );

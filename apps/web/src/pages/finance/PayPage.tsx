@@ -1,12 +1,27 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import { AlertTriangle, Ban, CheckCircle, FileQuestion, ShieldCheck, Wallet } from 'lucide-react';
 import { api, ApiError } from '../../api/client';
 import type { PayPageData } from '../../api/types';
+import { Alert } from '../../components/Alert';
+import { buttonClass } from '../../components/Button';
+import { Loading } from '../../components/Loading';
 import { CopyButton } from './CopyButton';
 import { errorMessage, formatExact } from './format';
 import { usePolling } from './usePolling';
-import './finance.css';
+
+function PublicShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-[100dvh] flex flex-col items-center px-4 py-8 sm:py-12">
+      <div className="text-2xl font-bold tracking-tight text-indigo-600 mb-6">PayTrail</div>
+      <div className="w-full max-w-md">{children}</div>
+      <p className="mt-8 flex items-center gap-1.5 text-xs text-slate-400">
+        <ShieldCheck size={14} /> Secure USDC payment on Solana
+      </p>
+    </div>
+  );
+}
 
 export function PayPage() {
   const { publicId } = useParams<{ publicId: string }>();
@@ -29,63 +44,108 @@ export function PayPage() {
   const finished = data?.status === 'PAID' || data?.status === 'OVERPAID' || data?.status === 'CANCELLED';
   usePolling(() => void load(), 4000, !notFound && !finished);
 
-  if (notFound) return <div className="pay-wrap card pay-card"><h2>Invoice not found</h2><p className="muted">Check the link you received.</p></div>;
-  if (!data) return <div className="pay-wrap">{error ? <div className="fin-alert-error">{error}</div> : <p className="muted">Loading…</p>}</div>;
+  if (notFound) {
+    return (
+      <PublicShell>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+          <div className="mx-auto w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-4">
+            <FileQuestion size={26} />
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900">Invoice not found</h2>
+          <p className="text-slate-500 mt-1">Check the link you received.</p>
+        </div>
+      </PublicShell>
+    );
+  }
+  if (!data) {
+    return (
+      <PublicShell>
+        {error ? <Alert>{error}</Alert> : <div className="flex justify-center"><Loading /></div>}
+      </PublicShell>
+    );
+  }
 
   const paid = data.status === 'PAID' || data.status === 'OVERPAID';
   const amount = formatExact(data.amountToSend);
 
   return (
-    <div className="pay-wrap fin-stack">
-      <div className="card pay-card">
-        <div className="muted">{data.freelancerName} is requesting a payment</div>
-        <h2 style={{ margin: '4px 0' }}>{data.description}</h2>
-        <div className="muted">Billed to {data.clientName}</div>
+    <PublicShell>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-6 sm:p-8 text-center border-b border-slate-100">
+          <p className="text-sm text-slate-500">{data.freelancerName} is requesting a payment</p>
+          <h1 className="text-xl font-semibold text-slate-900 mt-1 break-words">{data.description}</h1>
+          <p className="text-sm text-slate-500 mt-1">Billed to {data.clientName}</p>
+        </div>
 
         {paid ? (
-          <div className="pay-success">
-            <div className="tick">✓</div>
-            <h2 style={{ margin: 0 }}>Payment received</h2>
-            <p className="muted">Thank you! {data.freelancerName} has been paid for this invoice.</p>
+          <div className="p-8 text-center">
+            <div className="mx-auto w-20 h-20 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+              <CheckCircle size={44} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Payment received</h2>
+            <p className="text-slate-500 mt-2">Thank you! {data.freelancerName} has been paid for this invoice.</p>
           </div>
         ) : data.status === 'CANCELLED' ? (
-          <div className="fin-alert-error" style={{ marginTop: 16 }}>This invoice was cancelled. Please do not send a payment.</div>
-        ) : (
-          <>
-            <div style={{ marginTop: 20 }} className="muted">
-              {data.status === 'PARTIALLY_PAID' ? 'Remaining balance — send exactly' : 'Send exactly'}
+          <div className="p-8 text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4">
+              <Ban size={32} />
             </div>
-            <div className="pay-amount">{amount} USDC</div>
-            <div className="fin-row" style={{ justifyContent: 'center' }}>
-              <CopyButton text={amount} label="Copy amount" />
+            <p className="text-red-700 font-medium">This invoice was cancelled. Please do not send a payment.</p>
+          </div>
+        ) : (
+          <div className="p-6 sm:p-8 space-y-6">
+            <div className="text-center">
+              <p className="text-sm font-medium text-slate-500">
+                {data.status === 'PARTIALLY_PAID' ? 'Remaining balance — send exactly' : 'Send exactly'}
+              </p>
+              <div className="mt-1 text-4xl sm:text-5xl font-bold text-slate-900 tabular-nums break-all">
+                {amount}
+                <span className="text-xl sm:text-2xl text-slate-400 font-medium ml-2">USDC</span>
+              </div>
+              <div className="mt-3 flex justify-center">
+                <CopyButton text={amount} label="Copy amount" />
+              </div>
             </div>
 
             {data.solanaPayUrl && (
-              <>
-                <div className="pay-qr"><QRCodeSVG value={data.solanaPayUrl} size={220} level="M" /></div>
-                <a className="fin-btn big" href={data.solanaPayUrl}>Open in wallet</a>
-              </>
+              <div className="space-y-4">
+                <div className="mx-auto w-fit p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                  <QRCodeSVG value={data.solanaPayUrl} size={220} level="M" className="max-w-full h-auto" />
+                </div>
+                <a className={buttonClass('primary', 'lg', 'w-full')} href={data.solanaPayUrl}>
+                  <Wallet size={20} /> Open in wallet
+                </a>
+              </div>
             )}
 
-            <div style={{ marginTop: 20, textAlign: 'left' }}>
-              <div className="muted" style={{ fontSize: '0.85rem' }}>Recipient address (Solana, USDC)</div>
-              <div className="fin-row">
-                <div className="fin-mono" style={{ flex: 1, minWidth: 0 }}>{data.recipientAddress}</div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-1.5">Recipient address (Solana, USDC)</p>
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <div className="font-mono text-sm text-slate-800 break-all flex-1 min-w-0">{data.recipientAddress}</div>
                 <CopyButton text={data.recipientAddress} />
               </div>
             </div>
 
-            <div className="pay-warn" style={{ marginTop: 16 }}>
-              Send exactly this amount. If paying from an exchange, make sure the fee is not deducted from it.
-              Send USDC on the Solana network only.
+            <div className="flex gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3.5 text-sm">
+              <AlertTriangle size={18} className="shrink-0 mt-px" />
+              <p>
+                Send exactly this amount. If paying from an exchange, make sure the fee is not deducted from it.
+                Send USDC on the Solana network only.
+              </p>
             </div>
 
-            <div style={{ marginTop: 16 }}>
-              <span className="pay-live">Waiting for payment…</span>
+            <div className="flex justify-center">
+              <span className="inline-flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-xs font-medium text-slate-500">
+                <span className="relative flex w-2 h-2">
+                  <span className="absolute inline-flex w-full h-full rounded-full bg-amber-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex w-2 h-2 rounded-full bg-amber-500" />
+                </span>
+                Waiting for payment…
+              </span>
             </div>
-          </>
+          </div>
         )}
       </div>
-    </div>
+    </PublicShell>
   );
 }
