@@ -1,0 +1,21 @@
+# env / secrets
+.env
+*.env.local
+*.key
+id.json
+
+# java
+apps/api/target/
+*.class
+
+# node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# ide / os
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

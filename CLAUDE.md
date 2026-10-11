@@ -42,4 +42,30 @@ specs           especificações
 
 ## Comandos
 
-_(preencher quando o scaffold existir)_
+Pré-requisitos: Java 21 + Maven 3.9, Node 20, Docker (Postgres). Copie `.env.example` → `.env` e preencha.
+
+```bash
+# Postgres
+docker compose --env-file .env -f infra/docker-compose.yml up -d
+
+# API (porta 8080, base /api). Perfil dev cria os usuários de demo (SEED_PASSWORD)
+cd apps/api && set -a && . ../../.env && set +a && mvn spring-boot:run -Dspring-boot.run.profiles=dev
+cd apps/api && mvn test            # motor de conciliação: casos de specs/02 §6
+
+# Web (porta 5173, proxy /api → 8080)
+cd apps/web && npm install && npm run dev
+cd apps/web && npm run mock        # mock da API a partir do OpenAPI (porta 4010)
+VITE_API_TARGET=http://localhost:4010 npm run dev   # front contra o mock
+cd apps/web && npm run gen:api     # gera src/api/schema.d.ts do 03-api.yaml
+
+# Watcher (lê a Solana devnet e envia transfers à API)
+cd apps/watcher && npm install && npm run dev
+cd apps/watcher && npm test
+```
+
+## Estado do esqueleto
+
+- **API:** auth (register/login/JWT), `GET/PATCH /me`, seed de demo, schema completo (Flyway `V1__init.sql`), filtro de `/internal/**`, e motor de conciliação **puro** em `reconciliation/` (Matcher, UniqueSuffixAllocator, FxDates, TransferFilter) com testes. Faltam os serviços/controllers das fatias 1–6.
+- **Watcher:** adapter Solana completo (reference + ATA, delta de saldo). Depende de `GET /internal/watch-targets` e `POST /internal/transfers` na API.
+- **Web:** login/cadastro com escolha de papel, navegação por papel, rotas com placeholders que apontam o cenário da spec.
+- `reference` da fatura (Solana Pay): 32 bytes aleatórios em base58. Não precisa ser uma chave no curve.

@@ -64,7 +64,7 @@ Uma transferência de USDC detectada on-chain para a carteira de algum freelance
 `id, invoiceId, canonicalJson text, sha256 text (único), createdAt, anchorNetwork?, anchorTx?`
 
 ### ExchangeRate (cache)
-`date, rule, buyRate, sellRate, source` — PK `(date, rule)`.
+`quoteDate (PK), buyRate, sellRate, source, fetchedAt`. A cotação do dia não depende da regra; a regra (`fxRule`) só decide **qual data** consultar.
 
 ### Conversation / Message / Proposal (ver 06)
 - **Conversation:** `id, userAId, userBId, createdAt, lastMessageAt` — par único (ordenado).

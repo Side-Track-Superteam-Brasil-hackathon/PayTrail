@@ -12,7 +12,7 @@ Se todos os cenários abaixo passam de ponta a ponta, o MVP está pronto. O víd
 | Carteira "cliente" | — | devnet, com USDC do faucet da Circle |
 | Carteira "exchange" | — | devnet, outra carteira com USDC — simula saque de exchange (transferência simples, sem reference) |
 
-Senha de todos os usuários de seed: definida em `apps/api/src/main/resources/seed.sql` (não repetir em chat/docs).
+Seed criado pelo `DevSeeder` (perfil `dev`). Senha comum vem de `SEED_PASSWORD` no `.env`, e a carteira da Ana de `SEED_ANA_SOLANA_WALLET`. Nenhuma credencial fica no repositório.
 
 ## Cenários
 
