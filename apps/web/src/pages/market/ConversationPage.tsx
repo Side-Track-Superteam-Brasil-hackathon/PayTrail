@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, FileSignature, Send, ShieldCheck, X } from 'lucide-react';
 import { api } from '../../api/client';
 import type { Conversation, Message, Proposal } from '../../api/types';
 import { useAuth } from '../../auth/AuthContext';
+import { Avatar } from '../../components/Avatar';
+import { Button } from '../../components/Button';
+import { cx } from '../../components/cx';
+import { Field, inputBase } from '../../components/Field';
+import { ChatLayout } from './ChatLayout';
 import { errorMessage } from './errors';
 import { ProposalCard } from './ProposalCard';
-import { defaultPeriod, formatDateTime } from './time';
+import { defaultPeriod, formatMessageTime } from './time';
 import { usePolling } from './usePolling';
-import './market.css';
 
 function lastCreatedAt(msgs: Message[]): string | undefined {
   let last: string | undefined;
@@ -21,6 +26,15 @@ function mergeMessages(prev: Message[], incoming: Message[]): Message[] {
   for (const m of prev) if (m.id) byId.set(m.id, m);
   for (const m of incoming) if (m.id) byId.set(m.id, { ...byId.get(m.id), ...m });
   return [...byId.values()].sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''));
+}
+
+function Time({ iso, mine }: { iso?: string; mine: boolean }) {
+  if (!iso) return null;
+  return (
+    <time dateTime={iso} className={cx('text-xs text-slate-400 mt-1', mine ? 'mr-1' : 'ml-1')}>
+      {formatMessageTime(iso)}
+    </time>
+  );
 }
 
 export function ConversationPage() {
@@ -137,18 +151,38 @@ export function ConversationPage() {
 
   const myId = user?.id;
   const canPropose = !!user && !!other?.role && other.role !== user.role;
+  const otherIsAccountant = other?.role === 'ACCOUNTANT';
 
   return (
-    <div className="market conv">
-      <div className="conv-head">
-        <Link to="/inbox" className="muted">&larr; Inbox</Link>
-        <div>
-          <strong>{other?.name ?? 'Conversation'}</strong>{' '}
-          {other?.role && <span className="role-tag">{other.role.toLowerCase()}</span>}
+    <ChatLayout activeId={conversationId}>
+      {/* Header */}
+      <div className="p-3 sm:p-4 border-b border-slate-200 flex items-center gap-3 bg-white">
+        <Link
+          to="/inbox"
+          className="md:hidden p-1.5 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+          aria-label="Back to inbox"
+        >
+          <ArrowLeft size={20} />
+        </Link>
+        <Avatar name={other?.name} seed={other?.id} />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-slate-900 truncate">{other?.name ?? 'Conversation'}</h3>
+          {other?.role && (
+            <p className={cx('text-xs font-medium', otherIsAccountant ? 'text-emerald-600' : 'text-indigo-600')}>
+              {otherIsAccountant ? 'Accountant' : 'Freelancer'}
+            </p>
+          )}
         </div>
-        <span className="spacer" />
         {canPropose && !showForm && (
-          <button className="secondary" onClick={() => setShowForm(true)}>Send proposal</button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            icon={<FileSignature size={16} />}
+          >
+            <span className="hidden sm:inline">Send proposal</span>
+            <span className="sm:hidden">Propose</span>
+          </Button>
         )}
       </div>
 
@@ -156,38 +190,83 @@ export function ConversationPage() {
         <ProposalForm conversationId={conversationId} onCancel={() => setShowForm(false)} onCreated={onProposalCreated} />
       )}
 
-      <div className="thread" ref={threadRef} onScroll={onScroll}>
-        {messages.length === 0 && !error && <p className="muted notice">No messages yet. Say hello.</p>}
+      {/* Thread */}
+      <div
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-slate-50/50"
+        ref={threadRef}
+        onScroll={onScroll}
+      >
+        {messages.length === 0 && !error && (
+          <div className="flex justify-center">
+            <div className="bg-slate-100 px-4 py-2 rounded-full text-xs font-medium text-slate-500">No messages yet. Say hello.</div>
+          </div>
+        )}
         {messages.map((m) => {
           if (m.type === 'SYSTEM') {
-            return <div className="notice" key={m.id}>{m.body}</div>;
+            return (
+              <div className="flex justify-center" key={m.id}>
+                <div className="bg-slate-100 px-4 py-2 rounded-2xl sm:rounded-full text-xs font-medium text-slate-500 flex items-center gap-2 max-w-[90%] text-center">
+                  <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
+                  <span>{m.body}</span>
+                </div>
+              </div>
+            );
           }
           if (m.type === 'PROPOSAL' && m.proposal && myId) {
-            return <ProposalCard key={m.id} proposal={m.proposal} currentUserId={myId} onChange={onProposalChange} />;
+            const mine = m.proposal.senderId === myId;
+            return (
+              <div key={m.id} className={cx('flex flex-col', mine ? 'items-end' : 'items-start')}>
+                <ProposalCard proposal={m.proposal} currentUserId={myId} onChange={onProposalChange} />
+                <Time iso={m.createdAt} mine={mine} />
+              </div>
+            );
           }
           const mine = m.senderId === myId;
           return (
-            <div className={`bubble${mine ? ' mine' : ''}`} key={m.id}>
-              {m.body}
-              {m.createdAt && <time dateTime={m.createdAt}>{formatDateTime(m.createdAt)}</time>}
+            <div key={m.id} className={cx('flex flex-col', mine ? 'items-end' : 'items-start')}>
+              <div
+                className={cx(
+                  'px-4 py-2.5 rounded-2xl shadow-sm max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap [overflow-wrap:anywhere]',
+                  mine
+                    ? 'bg-indigo-600 text-white rounded-tr-sm'
+                    : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm',
+                )}
+              >
+                {m.body}
+              </div>
+              <Time iso={m.createdAt} mine={mine} />
             </div>
           );
         })}
       </div>
-      {error && <p className="error small">{error}</p>}
-      <div className="composer">
-        <textarea
-          rows={2}
-          value={text}
-          maxLength={4000}
-          placeholder="Write a message (Enter to send, Shift+Enter for a new line)"
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={onKeyDown}
-          aria-label="Message"
-        />
-        <button disabled={sending || !text.trim()} onClick={() => void send()}>Send</button>
+
+      {error && <p className="px-4 pt-2 text-sm text-red-600 bg-white">{error}</p>}
+
+      {/* Composer */}
+      <div className="p-3 sm:p-4 border-t border-slate-200 bg-white">
+        <div className="flex gap-2 items-end">
+          <textarea
+            rows={1}
+            value={text}
+            maxLength={4000}
+            placeholder="Write a message (Enter to send, Shift+Enter for a new line)"
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={onKeyDown}
+            aria-label="Message"
+            className="flex-1 min-w-0 resize-none max-h-32 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400 placeholder:truncate"
+          />
+          <button
+            type="button"
+            disabled={sending || !text.trim()}
+            onClick={() => void send()}
+            aria-label="Send"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            <Send size={20} />
+          </button>
+        </div>
       </div>
-    </div>
+    </ChatLayout>
   );
 }
 
@@ -234,41 +313,50 @@ function ProposalForm({ conversationId, onCancel, onCreated }: FormProps) {
   }
 
   return (
-    <form className="proposal-form" onSubmit={(e) => void submit(e)}>
-      <label>
-        Fee amount
-        <input
-          required
-          inputMode="decimal"
-          pattern="[0-9]+([.][0-9]{1,6})?"
-          placeholder="150.00"
-          value={fee}
-          onChange={(e) => setFee(e.target.value)}
-        />
-      </label>
-      <label>
-        Currency
-        <select value={currency} onChange={(e) => setCurrency(e.target.value as 'BRL' | 'USDC')}>
-          <option value="BRL">BRL</option>
-          <option value="USDC">USDC</option>
-        </select>
-      </label>
-      <label>
-        Data access from
-        <input type="date" required value={start} onChange={(e) => setStart(e.target.value)} />
-      </label>
-      <label>
-        Data access until
-        <input type="date" required value={end} onChange={(e) => setEnd(e.target.value)} />
-      </label>
-      <label className="full">
-        Note
-        <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
-      </label>
-      {error && <p className="error small full">{error}</p>}
-      <div className="btns full">
-        <button disabled={busy}>{busy ? 'Sending...' : 'Send proposal'}</button>
-        <button type="button" className="secondary" onClick={onCancel}>Cancel</button>
+    <form
+      className="border-b border-slate-200 bg-white p-4 max-h-[55%] overflow-y-auto shrink-0"
+      onSubmit={(e) => void submit(e)}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="flex items-center gap-2 font-semibold text-slate-900">
+          <ShieldCheck size={18} className="text-indigo-600" /> New proposal
+        </h4>
+        <button type="button" onClick={onCancel} aria-label="Close" className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+          <X size={18} />
+        </button>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="Fee amount">
+          <input
+            required
+            inputMode="decimal"
+            pattern="[0-9]+([.][0-9]{1,6})?"
+            placeholder="150.00"
+            value={fee}
+            onChange={(e) => setFee(e.target.value)}
+            className={`${inputBase} w-full px-3 py-2`}
+          />
+        </Field>
+        <Field label="Currency">
+          <select value={currency} onChange={(e) => setCurrency(e.target.value as 'BRL' | 'USDC')} className={`${inputBase} w-full px-3 py-2`}>
+            <option value="BRL">BRL</option>
+            <option value="USDC">USDC</option>
+          </select>
+        </Field>
+        <Field label="Data access from">
+          <input type="date" required value={start} onChange={(e) => setStart(e.target.value)} className={`${inputBase} w-full px-3 py-2`} />
+        </Field>
+        <Field label="Data access until">
+          <input type="date" required value={end} onChange={(e) => setEnd(e.target.value)} className={`${inputBase} w-full px-3 py-2`} />
+        </Field>
+        <Field label="Note" className="sm:col-span-2">
+          <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} className={`${inputBase} w-full px-3 py-2`} />
+        </Field>
+      </div>
+      {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
+        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" variant="accent" disabled={busy}>{busy ? 'Sending...' : 'Send proposal'}</Button>
       </div>
     </form>
   );

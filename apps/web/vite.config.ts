@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 
 // VITE_API_TARGET=http://localhost:4010 para usar o mock (npm run mock) no lugar da API real.
 const target = process.env.VITE_API_TARGET ?? 'http://localhost:8080';
-const useMock = target.includes('4010');
+const useMock = /:401\d\b/.test(target); // Prism mock on ports 4010–4019
 
 export default defineConfig({
   plugins: [react()],

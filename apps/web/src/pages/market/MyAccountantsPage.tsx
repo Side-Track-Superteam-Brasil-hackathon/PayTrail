@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CalendarRange, Eye, EyeOff, Lock, MapPin, ShieldCheck, ShieldOff } from 'lucide-react';
 import { api } from '../../api/client';
 import type { AccountantAccess } from '../../api/types';
+import { Alert } from '../../components/Alert';
+import { Avatar } from '../../components/Avatar';
+import { Button } from '../../components/Button';
+import { EmptyState } from '../../components/EmptyState';
+import { Loading } from '../../components/Loading';
+import { PageHeader } from '../../components/PageHeader';
+import { Pill } from '../../components/Pill';
 import { errorMessage } from './errors';
 import { formatDate, formatDateTime } from './time';
-import './market.css';
 
 interface LogEntry {
   action?: string;
@@ -73,72 +80,98 @@ export function MyAccountantsPage() {
   }
 
   return (
-    <div className="market">
-      <div className="page-head">
-        <h1>My accountants</h1>
+    <div className="space-y-6">
+      <PageHeader title="My accountants" subtitle="Who can see your accounting history, and what they did with it." />
+      <div className="flex gap-3 bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-2xl p-4 text-sm">
+        <Lock size={18} className="text-indigo-600 shrink-0 mt-0.5" />
+        <p>
+          Access is granted only when you accept a proposal, and only for the period you agreed on. You can revoke it at
+          any time, with immediate effect, and every view or export by your accountant is logged here.
+        </p>
       </div>
-      <div className="info">
-        Access is granted only when you accept a proposal, and only for the period you agreed on. You can revoke it at
-        any time, with immediate effect, and every view or export by your accountant is logged here.
-      </div>
-      {error && <p className="error">{error}</p>}
-      {items === null && !error && <p className="muted">Loading...</p>}
+      {error && <Alert>{error}</Alert>}
+      {items === null && !error && <Loading />}
       {items?.length === 0 && (
-        <div className="card empty">
-          <p className="muted">No accountant has access to your records.</p>
+        <EmptyState icon={<ShieldCheck size={26} />} title="No accountant has access to your records">
           <Link to="/directory">Find an accountant</Link> and send a proposal from the conversation.
-        </div>
+        </EmptyState>
       )}
-      <div className="stack">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 items-start">
         {items?.map((a) => {
           const id = a.id ?? '';
           const log = logs[id];
           const status = a.status ?? 'ACTIVE';
           return (
-            <div className="tile" key={id}>
-              <div className="tile-head">
-                <div>
-                  <strong>{a.accountant?.name}</strong>
-                  <div className="muted small">{a.accountant?.city}</div>
+            <div key={id} className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200 flex flex-col gap-4">
+              <div className="flex items-start gap-4">
+                <Avatar name={a.accountant?.name} seed={a.accountant?.id} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold text-lg text-slate-900 truncate">{a.accountant?.name}</h3>
+                    <Pill tone={status === 'ACTIVE' ? 'emerald' : 'red'}>{status === 'ACTIVE' ? 'Active' : 'Revoked'}</Pill>
+                  </div>
+                  {a.accountant?.city && (
+                    <p className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                      <MapPin size={12} /> {a.accountant.city}
+                    </p>
+                  )}
                 </div>
-                <span className={`badge badge-${status.toLowerCase()}`}>{status === 'ACTIVE' ? 'Active' : 'Revoked'}</span>
               </div>
-              <div className="small">
-                Period: {a.periodStart && formatDate(a.periodStart)} to {a.periodEnd && formatDate(a.periodEnd)}
+
+              <div className="bg-slate-50 rounded-xl p-3.5 text-sm space-y-1">
+                <p className="flex items-center gap-2 text-slate-700">
+                  <CalendarRange size={16} className="text-slate-400 shrink-0" />
+                  Period: {a.periodStart && formatDate(a.periodStart)} to {a.periodEnd && formatDate(a.periodEnd)}
+                </p>
+                <p className="text-xs text-slate-500 pl-6">
+                  Granted {a.grantedAt && formatDateTime(a.grantedAt)}
+                  {a.revokedAt && ` · Revoked ${formatDateTime(a.revokedAt)}`}
+                </p>
               </div>
-              <div className="muted small">
-                Granted {a.grantedAt && formatDateTime(a.grantedAt)}
-                {a.revokedAt && ` · Revoked ${formatDateTime(a.revokedAt)}`}
-              </div>
-              <div className="actions">
-                <button className="secondary" onClick={() => void toggleLog(id)}>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void toggleLog(id)}
+                  icon={log ? <EyeOff size={16} /> : <Eye size={16} />}
+                >
                   {log ? 'Hide access log' : 'View access log'}
-                </button>
+                </Button>
                 {status === 'ACTIVE' && confirming !== id && (
-                  <button className="danger" onClick={() => setConfirming(id)}>Revoke</button>
+                  <Button variant="danger" size="sm" onClick={() => setConfirming(id)} icon={<ShieldOff size={16} />}>
+                    Revoke
+                  </Button>
                 )}
               </div>
+
               {confirming === id && (
-                <div className="alert">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800">
                   Revoke {a.accountant?.name}&apos;s access now? They will immediately lose access to your records.
-                  <div className="actions" style={{ marginTop: 8 }}>
-                    <button className="danger" disabled={busy === id} onClick={() => void revoke(id)}>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <Button
+                      size="sm"
+                      variant="dangerSolid"
+                      disabled={busy === id}
+                      onClick={() => void revoke(id)}
+                    >
                       {busy === id ? 'Revoking...' : 'Yes, revoke'}
-                    </button>
-                    <button className="secondary" onClick={() => setConfirming(null)}>Keep access</button>
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => setConfirming(null)}>Keep access</Button>
                   </div>
                 </div>
               )}
-              {log === 'loading' && <p className="muted small">Loading log...</p>}
+
+              {log === 'loading' && <p className="text-sm text-slate-500">Loading log...</p>}
               {Array.isArray(log) &&
                 (log.length === 0 ? (
-                  <p className="muted small">No access recorded yet.</p>
+                  <p className="text-sm text-slate-500">No access recorded yet.</p>
                 ) : (
-                  <ul className="log small">
+                  <ul className="divide-y divide-slate-100 border border-slate-200 rounded-xl text-sm">
                     {log.map((l, i) => (
-                      <li key={`${l.createdAt}-${i}`}>
-                        {ACTION_LABEL[l.action ?? ''] ?? l.action} ·{' '}
-                        <span className="muted">{l.createdAt && formatDateTime(l.createdAt)}</span>
+                      <li key={`${l.createdAt}-${i}`} className="flex flex-wrap justify-between gap-x-3 gap-y-0.5 px-3.5 py-2.5">
+                        <span className="text-slate-700">{ACTION_LABEL[l.action ?? ''] ?? l.action}</span>
+                        <span className="text-xs text-slate-400">{l.createdAt && formatDateTime(l.createdAt)}</span>
                       </li>
                     ))}
                   </ul>

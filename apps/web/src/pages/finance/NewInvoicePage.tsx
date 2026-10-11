@@ -1,9 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Info } from 'lucide-react';
 import { api, ApiError } from '../../api/client';
 import type { Invoice } from '../../api/types';
+import { Alert } from '../../components/Alert';
+import { Button, ButtonLink } from '../../components/Button';
+import { Card } from '../../components/Card';
+import { Field, inputClass } from '../../components/Field';
+import { PageHeader } from '../../components/PageHeader';
 import { errorMessage, todayPlusDays } from './format';
-import './finance.css';
 
 export function NewInvoicePage() {
   const navigate = useNavigate();
@@ -43,45 +48,47 @@ export function NewInvoicePage() {
   };
 
   return (
-    <div className="card" style={{ maxWidth: 560, margin: '0 auto' }}>
-      <h1 style={{ marginTop: 0 }}>New invoice</h1>
-      {walletMissing && (
-        <div className="fin-banner" style={{ marginBottom: 12 }}>
-          Set your Solana wallet in your <Link to="/profile">profile</Link> before creating an invoice.
-        </div>
-      )}
-      <form onSubmit={submit}>
-        <label>
-          Client name
-          <input value={clientName} onChange={(e) => setClientName(e.target.value)} required placeholder="Acme Inc" />
-        </label>
-        <label>
-          Client email (optional)
-          <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="billing@acme.com" />
-        </label>
-        <label>
-          Description
-          <input value={description} onChange={(e) => setDescription(e.target.value)} required placeholder="Landing page — Acme Inc" />
-        </label>
-        <div className="fin-form-row">
-          <label>
-            Amount (USDC)
-            <input type="number" inputMode="decimal" step="0.01" min="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required placeholder="1500.00" />
-          </label>
-          <label>
-            Due date
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required />
-          </label>
-        </div>
-        <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
-          We add a few cents to the amount so every invoice has its own exact value and payments can be matched automatically.
-        </p>
-        {error && <div className="fin-alert-error">{error}</div>}
-        <div className="fin-row">
-          <button type="submit" disabled={busy}>{busy ? 'Creating…' : 'Create invoice'}</button>
-          <Link to="/invoices">Cancel</Link>
-        </div>
-      </form>
+    <div className="max-w-2xl mx-auto">
+      <PageHeader
+        back={{ to: '/invoices', label: 'Invoices' }}
+        title="New invoice"
+        subtitle="Your client pays in USDC on Solana using the payment link."
+      />
+      <Card>
+        {walletMissing && (
+          <Alert tone="warning" className="mb-5">
+            Set your Solana wallet in your <Link to="/profile">profile</Link> before creating an invoice.
+          </Alert>
+        )}
+        <form onSubmit={submit} className="space-y-5">
+          <Field label="Client name">
+            <input className={inputClass} value={clientName} onChange={(e) => setClientName(e.target.value)} required placeholder="Acme Inc" />
+          </Field>
+          <Field label="Client email (optional)">
+            <input className={inputClass} type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="billing@acme.com" />
+          </Field>
+          <Field label="Description">
+            <input className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} required placeholder="Landing page — Acme Inc" />
+          </Field>
+          <div className="grid sm:grid-cols-2 gap-5">
+            <Field label="Amount (USDC)">
+              <input className={inputClass} type="number" inputMode="decimal" step="0.01" min="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required placeholder="1500.00" />
+            </Field>
+            <Field label="Due date">
+              <input className={inputClass} type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required />
+            </Field>
+          </div>
+          <div className="flex gap-2.5 bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-600">
+            <Info size={18} className="text-indigo-500 shrink-0 mt-px" />
+            <p>We add a few cents to the amount so every invoice has its own exact value and payments can be matched automatically.</p>
+          </div>
+          {error && <Alert>{error}</Alert>}
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+            <ButtonLink to="/invoices" variant="ghost">Cancel</ButtonLink>
+            <Button type="submit" variant="accent" disabled={busy}>{busy ? 'Creating…' : 'Create invoice'}</Button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 }

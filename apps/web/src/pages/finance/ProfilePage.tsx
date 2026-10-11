@@ -1,9 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Wallet } from 'lucide-react';
 import { api, ApiError } from '../../api/client';
 import type { FxRule, User } from '../../api/types';
 import { useAuth } from '../../auth/AuthContext';
+import { Alert } from '../../components/Alert';
+import { Avatar } from '../../components/Avatar';
+import { Button } from '../../components/Button';
+import { Card } from '../../components/Card';
+import { Field, inputClass } from '../../components/Field';
+import { PageHeader } from '../../components/PageHeader';
+import { Pill } from '../../components/Pill';
 import { errorMessage } from './format';
-import './finance.css';
 
 export function ProfilePage() {
   const { user, refresh } = useAuth();
@@ -55,42 +62,68 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="card" style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ marginTop: 0 }}>Profile</h1>
-      <p className="muted" style={{ marginTop: 0 }}>{user.email} · {user.role === 'FREELANCER' ? 'Freelancer' : 'Accountant'}</p>
-      <form onSubmit={submit}>
-        <label>Name<input value={name} onChange={(e) => setName(e.target.value)} required /></label>
-        <label>City<input value={city} onChange={(e) => setCity(e.target.value)} /></label>
-        <label>Bio<textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} /></label>
-        <label>
-          Specialties (comma separated)
-          <input value={specialties} onChange={(e) => setSpecialties(e.target.value)} placeholder="crypto, export services" />
-        </label>
-        {chips.length > 0 && <div className="fin-chips">{chips.map((c) => <span key={c} className="fin-chip">{c}</span>)}</div>}
+    <div className="max-w-2xl mx-auto">
+      <PageHeader title="Profile" subtitle="How you appear in the directory and how you get paid." />
+      <Card>
+        <div className="flex items-center gap-4 pb-6 mb-6 border-b border-slate-100">
+          <Avatar name={user.name} seed={user.id} size="xl" />
+          <div className="min-w-0">
+            <p className="font-semibold text-lg text-slate-900 truncate">{user.name}</p>
+            <p className="text-sm text-slate-500 truncate">{user.email}</p>
+            <Pill tone={isFreelancer ? 'indigo' : 'emerald'} className="mt-1.5">
+              {isFreelancer ? 'Freelancer' : 'Accountant'}
+            </Pill>
+          </div>
+        </div>
 
-        {isFreelancer && (
-          <>
-            <label>
-              Solana wallet (receives USDC)
-              <input className="fin-mono" value={wallet} onChange={(e) => setWallet(e.target.value)} placeholder="Your Solana address" spellCheck={false} />
-            </label>
-            <label>
-              BRL conversion rule
-              <select value={fxRule} onChange={(e) => setFxRule(e.target.value as FxRule)}>
-                <option value="CARNE_LEAO">Carnê-leão (individuals)</option>
-                <option value="PTAX_DAY">PTAX of the day</option>
-              </select>
-            </label>
-            <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
-              These rules are a simplified guide. Confirm which one applies to you with an accountant.
-            </p>
-          </>
-        )}
+        <form onSubmit={submit} className="space-y-5">
+          <div className="grid sm:grid-cols-2 gap-5">
+            <Field label="Name"><input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required /></Field>
+            <Field label="City"><input className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} /></Field>
+          </div>
+          <Field label="Bio"><textarea className={inputClass} rows={3} value={bio} onChange={(e) => setBio(e.target.value)} /></Field>
+          <Field label="Specialties (comma separated)">
+            <input className={inputClass} value={specialties} onChange={(e) => setSpecialties(e.target.value)} placeholder="crypto, export services" />
+          </Field>
+          {chips.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 -mt-2">
+              {chips.map((c) => <Pill key={c} tone="indigo">{c}</Pill>)}
+            </div>
+          )}
 
-        {error && <div className="fin-alert-error">{error}</div>}
-        {saved && <div className="fin-ok">Profile saved.</div>}
-        <div><button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button></div>
-      </form>
+          {isFreelancer && (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5 space-y-5">
+              <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                <Wallet size={18} className="text-indigo-600" /> Payments
+              </h3>
+              <Field label="Solana wallet (receives USDC)">
+                <input
+                  className={`${inputClass} font-mono text-sm`}
+                  value={wallet}
+                  onChange={(e) => setWallet(e.target.value)}
+                  placeholder="Your Solana address"
+                  spellCheck={false}
+                />
+              </Field>
+              <Field
+                label="BRL conversion rule"
+                hint="These rules are a simplified guide. Confirm which one applies to you with an accountant."
+              >
+                <select className={inputClass} value={fxRule} onChange={(e) => setFxRule(e.target.value as FxRule)}>
+                  <option value="CARNE_LEAO">Carnê-leão (individuals)</option>
+                  <option value="PTAX_DAY">PTAX of the day</option>
+                </select>
+              </Field>
+            </div>
+          )}
+
+          {error && <Alert>{error}</Alert>}
+          {saved && <Alert tone="success">Profile saved.</Alert>}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 }

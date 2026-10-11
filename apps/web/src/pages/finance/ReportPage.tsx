@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { BarChart3, Banknote, Coins, Download, ExternalLink, Lock, Receipt } from 'lucide-react';
 import { api, ApiError, getToken } from '../../api/client';
 import type { MonthlyReport } from '../../api/types';
+import { Alert } from '../../components/Alert';
+import { Button } from '../../components/Button';
+import { EmptyState } from '../../components/EmptyState';
+import { inputBase } from '../../components/Field';
+import { Loading } from '../../components/Loading';
+import { PageHeader } from '../../components/PageHeader';
+import { StatCard } from '../../components/StatCard';
+import { TBody, THead, Table, Td, Th } from '../../components/Table';
 import {
   currentMonth, errorMessage, formatBrl, formatDate, formatDateTime, formatRate, formatUsdc, shortAddr,
 } from './format';
-import './finance.css';
 
 export function ReportPage() {
   const { freelancerId, month: monthParam } = useParams<{ freelancerId?: string; month?: string }>();
@@ -67,70 +75,86 @@ export function ReportPage() {
   };
 
   return (
-    <div className="fin-stack">
-      <div className="fin-head">
-        <div>
-          {freelancerId && <Link to="/clients" className="muted">← My clients</Link>}
-          <h1>Monthly report</h1>
-        </div>
-        <div className="fin-row">
-          <input type="month" value={month} onChange={(e) => changeMonth(e.target.value)} aria-label="Month" />
-          <button onClick={() => void exportCsv()} disabled={exporting || noAccess}>{exporting ? 'Exporting…' : 'Export CSV'}</button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        back={freelancerId ? { to: '/clients', label: 'My clients' } : undefined}
+        title="Monthly report"
+        subtitle="Payments received in the month, converted to BRL."
+        actions={
+          <>
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => changeMonth(e.target.value)}
+              aria-label="Month"
+              className={`${inputBase} px-3 py-2`}
+            />
+            <Button
+              onClick={() => void exportCsv()}
+              disabled={exporting || noAccess}
+              icon={<Download size={18} />}
+            >
+              {exporting ? 'Exporting…' : 'Export CSV'}
+            </Button>
+          </>
+        }
+      />
 
       {noAccess && (
-        <div className="card fin-empty">
-          <h3>No access</h3>
-          <p className="muted">You do not have access to this report for the selected month. Access may have been revoked or may not cover this period.</p>
-        </div>
+        <EmptyState icon={<Lock size={26} />} title="No access">
+          You do not have access to this report for the selected month. Access may have been revoked or may not cover this period.
+        </EmptyState>
       )}
-      {error && <div className="fin-alert-error">{error}</div>}
-      {!report && !error && !noAccess && <p className="muted">Loading…</p>}
+      {error && <Alert>{error}</Alert>}
+      {!report && !error && !noAccess && <Loading />}
 
       {report && (
         <>
-          <div className="fin-grid">
-            <div className="fin-stat hl"><div className="k">Total USDC</div><div className="v">{formatUsdc(report.totalUsdc)}</div></div>
-            <div className="fin-stat hl"><div className="k">Total BRL</div><div className="v">{formatBrl(report.totalBrl)}</div></div>
-            <div className="fin-stat"><div className="k">Payments</div><div className="v">{report.rows?.length ?? 0}</div></div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <StatCard label="Total USDC" value={formatUsdc(report.totalUsdc)} suffix="USDC" icon={<Coins size={24} />} tone="indigo" />
+            <StatCard label="Total BRL" value={formatBrl(report.totalBrl)} icon={<Banknote size={24} />} tone="emerald" />
+            <StatCard label="Payments" value={report.rows?.length ?? 0} icon={<Receipt size={24} />} tone="slate" />
           </div>
 
           {(report.unmatchedCount ?? 0) > 0 && (
-            <div className="fin-banner">
+            <Alert tone="warning">
               {report.unmatchedCount} unmatched payment{report.unmatchedCount === 1 ? '' : 's'} not included in this report.
               {!freelancerId && <> <Link to="/payments/unmatched">Review them</Link>.</>}
-            </div>
+            </Alert>
           )}
 
           {(report.rows?.length ?? 0) === 0 ? (
-            <div className="card fin-empty"><p className="muted">No payments in {month}.</p></div>
+            <EmptyState icon={<BarChart3 size={26} />} title={`No payments in ${month}`}>
+              Payments matched to invoices in this month will show up here.
+            </EmptyState>
           ) : (
-            <div className="card fin-table-wrap">
-              <table className="fin-table">
-                <thead>
-                  <tr>
-                    <th>Date</th><th>Client</th><th>Invoice</th><th>Tx</th><th className="num">USDC</th>
-                    <th>FX rule</th><th>FX date</th><th className="num">Rate</th><th className="num">BRL</th>
+            <Table>
+              <THead>
+                <Th>Date</Th><Th>Client</Th><Th>Invoice</Th><Th>Tx</Th><Th num>USDC</Th>
+                <Th>FX rule</Th><Th>FX date</Th><Th num>Rate</Th><Th num>BRL</Th>
+              </THead>
+              <TBody>
+                {report.rows!.map((r, i) => (
+                  <tr key={`${r.txHash}-${i}`} className="hover:bg-slate-50/50">
+                    <Td className="whitespace-nowrap">{formatDateTime(r.date)}</Td>
+                    <Td className="font-medium text-slate-900 whitespace-nowrap">{r.clientName}</Td>
+                    <Td className="font-mono text-xs">{r.invoicePublicId}</Td>
+                    <Td>
+                      {r.explorerUrl ? (
+                        <a href={r.explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">
+                          {shortAddr(r.txHash)} <ExternalLink size={14} />
+                        </a>
+                      ) : shortAddr(r.txHash)}
+                    </Td>
+                    <Td num className="font-medium text-slate-900">{formatUsdc(r.amountUsdc)}</Td>
+                    <Td className="whitespace-nowrap">{r.fxRule === 'CARNE_LEAO' ? 'Carnê-leão' : 'PTAX day'}</Td>
+                    <Td className="whitespace-nowrap">{formatDate(r.fxDate)}</Td>
+                    <Td num>{formatRate(r.fxRate)}</Td>
+                    <Td num className="font-medium text-slate-900">{formatBrl(r.amountBrl)}</Td>
                   </tr>
-                </thead>
-                <tbody>
-                  {report.rows!.map((r, i) => (
-                    <tr key={`${r.txHash}-${i}`}>
-                      <td>{formatDateTime(r.date)}</td>
-                      <td>{r.clientName}</td>
-                      <td className="fin-mono">{r.invoicePublicId}</td>
-                      <td>{r.explorerUrl ? <a href={r.explorerUrl} target="_blank" rel="noreferrer">{shortAddr(r.txHash)} ↗</a> : shortAddr(r.txHash)}</td>
-                      <td className="num">{formatUsdc(r.amountUsdc)}</td>
-                      <td>{r.fxRule === 'CARNE_LEAO' ? 'Carnê-leão' : 'PTAX day'}</td>
-                      <td>{formatDate(r.fxDate)}</td>
-                      <td className="num">{formatRate(r.fxRate)}</td>
-                      <td className="num">{formatBrl(r.amountBrl)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </TBody>
+            </Table>
           )}
         </>
       )}

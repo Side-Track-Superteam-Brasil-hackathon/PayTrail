@@ -1,27 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import {
+  Ban, CheckCircle, Clock, Coins, ExternalLink, FileCheck2, History, Link2, Scale, Target, Wallet,
+} from 'lucide-react';
 import { api, ApiError } from '../../api/client';
 import type { InvoiceDetail, Receipt } from '../../api/types';
+import { Alert } from '../../components/Alert';
+import { Button, ButtonLink, buttonClass } from '../../components/Button';
+import { Card, CardTitle } from '../../components/Card';
+import { inputClass } from '../../components/Field';
+import { Loading } from '../../components/Loading';
+import { PageHeader } from '../../components/PageHeader';
+import { StatCard } from '../../components/StatCard';
+import { TBody, THead, Table, Td, Th } from '../../components/Table';
 import { CopyButton } from './CopyButton';
 import {
   errorMessage, formatBrl, formatDate, formatDateTime, formatExact, formatRate, formatUsdc, humanize, shortAddr,
 } from './format';
 import { MethodBadge, StatusBadge } from './StatusBadge';
 import { usePolling } from './usePolling';
-import './finance.css';
 
 function payLink(inv: InvoiceDetail): string {
   const p = inv.payUrl ?? `/pay/${inv.publicId}`;
   return p.startsWith('http') ? p : `${window.location.origin}${p.startsWith('/') ? '' : '/'}${p}`;
-}
-
-function Stat({ k, v, hl }: { k: string; v: string; hl?: boolean }) {
-  return (
-    <div className={`fin-stat${hl ? ' hl' : ''}`}>
-      <div className="k">{k}</div>
-      <div className="v">{v}</div>
-    </div>
-  );
 }
 
 export function InvoiceDetailPage() {
@@ -74,8 +75,14 @@ export function InvoiceDetailPage() {
     }
   };
 
-  if (error && !inv) return <div className="fin-alert-error">{error} <Link to="/invoices">Back to invoices</Link></div>;
-  if (!inv) return <p className="muted">Loading…</p>;
+  if (error && !inv) {
+    return (
+      <Alert>
+        {error} <Link to="/invoices">Back to invoices</Link>
+      </Alert>
+    );
+  }
+  if (!inv) return <Loading />;
 
   const payments = inv.payments ?? [];
   const events = inv.events ?? [];
@@ -87,103 +94,129 @@ export function InvoiceDetailPage() {
   const verifyLink = receipt ? (receipt.verifyUrl?.startsWith('http') ? receipt.verifyUrl : `${window.location.origin}/verify/${receipt.sha256}`) : '';
 
   return (
-    <div className="fin-stack">
-      <div className="fin-head">
-        <div>
-          <Link to="/invoices" className="muted">← Invoices</Link>
-          <h1>{inv.description}</h1>
-          <div className="fin-row">
+    <div className="space-y-6">
+      <PageHeader
+        back={{ to: '/invoices', label: 'Invoices' }}
+        title={inv.description}
+        meta={
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-500">
             <StatusBadge status={status} overdue={inv.overdue} />
-            <span className="muted">{inv.clientName}{inv.clientEmail ? ` · ${inv.clientEmail}` : ''} · due {formatDate(inv.dueDate)}</span>
+            <span className="break-all">
+              {inv.clientName}{inv.clientEmail ? ` · ${inv.clientEmail}` : ''} · due {formatDate(inv.dueDate)}
+            </span>
           </div>
-        </div>
-        <div className="fin-row">
-          {canReceipt && <button onClick={genReceipt} disabled={busy}>Generate receipt</button>}
-          {canCancel && <button className="fin-btn-danger" onClick={cancel} disabled={busy}>Cancel invoice</button>}
-        </div>
-      </div>
+        }
+        actions={
+          <>
+            {canReceipt && (
+              <Button onClick={genReceipt} disabled={busy} icon={<FileCheck2 size={18} />}>Generate receipt</Button>
+            )}
+            {canCancel && (
+              <Button variant="danger" onClick={cancel} disabled={busy} icon={<Ban size={18} />}>Cancel invoice</Button>
+            )}
+          </>
+        }
+      />
 
-      {actionError && <div className="fin-alert-error">{actionError}</div>}
+      {actionError && <Alert>{actionError}</Alert>}
 
-      <div className="fin-grid">
-        <Stat k="Base amount" v={`${formatUsdc(inv.baseAmount)} USDC`} />
-        <Stat k="Exact amount to send" v={`${formatExact(inv.uniqueAmount)} USDC`} hl />
-        <Stat k="Paid" v={`${formatUsdc(inv.amountPaid)} USDC`} />
-        <Stat k="Balance" v={`${formatUsdc(inv.balance)} USDC`} />
-        {hasExcess && <Stat k="Excess" v={`${formatUsdc(inv.excess)} USDC`} />}
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Exact amount to send" value={formatExact(inv.uniqueAmount)} suffix="USDC" icon={<Target size={22} />} tone="indigo" highlight />
+        <StatCard label="Base amount" value={formatUsdc(inv.baseAmount)} suffix="USDC" icon={<Coins size={22} />} tone="slate" />
+        <StatCard label="Paid" value={formatUsdc(inv.amountPaid)} suffix="USDC" icon={<CheckCircle size={22} />} tone="emerald" />
+        <StatCard label="Balance" value={formatUsdc(inv.balance)} suffix="USDC" icon={<Scale size={22} />} tone="amber" />
+        {hasExcess && <StatCard label="Excess" value={formatUsdc(inv.excess)} suffix="USDC" icon={<Wallet size={22} />} tone="blue" />}
       </div>
 
       {receipt && (
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>Receipt generated</h3>
-          <div className="muted">SHA-256</div>
-          <div className="fin-mono">{receipt.sha256}</div>
-          <div className="fin-row" style={{ marginTop: 10 }}>
-            <Link to={`/verify/${receipt.sha256}`} className="fin-btn">Open verify page</Link>
+        <Card className="border-emerald-200 bg-emerald-50/40">
+          <CardTitle icon={<FileCheck2 size={18} className="text-emerald-600" />}>Receipt generated</CardTitle>
+          <div className="text-xs font-medium uppercase tracking-wider text-slate-500">SHA-256</div>
+          <div className="font-mono text-sm text-slate-800 break-all mt-1">{receipt.sha256}</div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <ButtonLink to={`/verify/${receipt.sha256}`} size="sm">Open verify page</ButtonLink>
             <CopyButton text={verifyLink} label="Copy verify link" />
             <CopyButton text={receipt.sha256 ?? ''} label="Copy hash" />
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Payment link</h3>
-        <div className="fin-row">
-          <input className="fin-input-readonly" readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
-          <CopyButton text={link} />
-          <a className="fin-btn-ghost" href={link} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>Open</a>
-        </div>
-      </div>
-
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Payments</h3>
-        {payments.length === 0 ? (
-          <p className="muted">No payments yet. This page refreshes automatically.</p>
-        ) : (
-          <div className="fin-table-wrap">
-            <table className="fin-table">
-              <thead>
-                <tr>
-                  <th className="num">USDC</th><th>Method</th><th className="num">BRL</th><th>FX</th><th>From</th><th>Tx</th><th>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((p) => (
-                  <tr key={p.id}>
-                    <td className="num">{formatExact(p.amount)}</td>
-                    <td><MethodBadge method={p.matchMethod} /></td>
-                    <td className="num">{formatBrl(p.amountBrl)}</td>
-                    <td>
-                      {p.fxRule ? (
-                        <>
-                          <div>{p.fxRule === 'CARNE_LEAO' ? 'Carnê-leão' : 'PTAX of the day'}</div>
-                          <div className="muted">{formatDate(p.fxDate)} · {formatRate(p.fxRate)}</div>
-                        </>
-                      ) : '—'}
-                    </td>
-                    <td className="fin-mono">{shortAddr(p.fromAddress)}</td>
-                    <td>{p.explorerUrl ? <a href={p.explorerUrl} target="_blank" rel="noreferrer">{shortAddr(p.txHash)} ↗</a> : shortAddr(p.txHash)}</td>
-                    <td>{formatDateTime(p.blockTime)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <Card>
+        <CardTitle icon={<Link2 size={18} />}>Payment link</CardTitle>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            className={`${inputClass} bg-slate-50 font-mono text-sm`}
+            readOnly
+            value={link}
+            onFocus={(e) => e.currentTarget.select()}
+            aria-label="Payment link"
+          />
+          <div className="flex gap-2 shrink-0">
+            <CopyButton text={link} />
+            <a className={buttonClass('secondary', 'sm')} href={link} target="_blank" rel="noreferrer">
+              <ExternalLink size={16} /> Open
+            </a>
           </div>
+        </div>
+      </Card>
+
+      <div>
+        <h3 className="flex items-center gap-2 font-semibold text-slate-900 mb-3">
+          <Wallet size={18} className="text-slate-400" /> Payments
+        </h3>
+        {payments.length === 0 ? (
+          <Card className="flex items-center gap-3 text-sm text-slate-500">
+            <Clock size={18} className="text-amber-500 shrink-0" />
+            No payments yet. This page refreshes automatically.
+          </Card>
+        ) : (
+          <Table>
+            <THead>
+              <Th num>USDC</Th><Th>Method</Th><Th num>BRL</Th><Th>FX</Th><Th>From</Th><Th>Tx</Th><Th>Time</Th>
+            </THead>
+            <TBody>
+              {payments.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-50/50">
+                  <Td num className="font-medium text-slate-900">{formatExact(p.amount)}</Td>
+                  <Td><MethodBadge method={p.matchMethod} /></Td>
+                  <Td num>{formatBrl(p.amountBrl)}</Td>
+                  <Td className="whitespace-nowrap">
+                    {p.fxRule ? (
+                      <>
+                        <div className="text-slate-900">{p.fxRule === 'CARNE_LEAO' ? 'Carnê-leão' : 'PTAX of the day'}</div>
+                        <div className="text-xs text-slate-500">{formatDate(p.fxDate)} · {formatRate(p.fxRate)}</div>
+                      </>
+                    ) : '—'}
+                  </Td>
+                  <Td className="font-mono text-xs">{shortAddr(p.fromAddress)}</Td>
+                  <Td>
+                    {p.explorerUrl ? (
+                      <a href={p.explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">
+                        {shortAddr(p.txHash)} <ExternalLink size={14} />
+                      </a>
+                    ) : shortAddr(p.txHash)}
+                  </Td>
+                  <Td className="whitespace-nowrap">{formatDateTime(p.blockTime)}</Td>
+                </tr>
+              ))}
+            </TBody>
+          </Table>
         )}
       </div>
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Trail</h3>
+      <Card>
+        <CardTitle icon={<History size={18} />}>Trail</CardTitle>
         {events.length === 0 ? (
-          <p className="muted">No events yet.</p>
+          <p className="text-sm text-slate-500">No events yet.</p>
         ) : (
-          <ul className="fin-trail">
+          <ol className="relative border-l-2 border-slate-200 ml-1.5 space-y-5">
             {events.map((ev, idx) => (
-              <li key={`${ev.createdAt}-${idx}`}>
-                <div className="t">{humanize(ev.type ?? '')}</div>
-                <div className="d">{formatDateTime(ev.createdAt)}</div>
+              <li key={`${ev.createdAt}-${idx}`} className="pl-5 relative">
+                <span className="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-50" />
+                <div className="font-medium text-slate-900">{humanize(ev.type ?? '')}</div>
+                <div className="text-xs text-slate-500">{formatDateTime(ev.createdAt)}</div>
                 {ev.payload && Object.keys(ev.payload).length > 0 && (
-                  <div className="p">
+                  <div className="text-xs text-slate-500 mt-1 break-all">
                     {Object.entries(ev.payload as Record<string, unknown>)
                       .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`)
                       .join(' · ')}
@@ -191,9 +224,9 @@ export function InvoiceDetailPage() {
                 )}
               </li>
             ))}
-          </ul>
+          </ol>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import './finance.css';
+import { Check, Copy } from 'lucide-react';
+import { Button } from '../../components/Button';
 
-export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
+export function CopyButton({ text, label = 'Copy', className }: { text: string; label?: string; className?: string }) {
   const [done, setDone] = useState(false);
   const copy = async () => {
     try {
@@ -18,8 +19,14 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
     setTimeout(() => setDone(false), 1500);
   };
   return (
-    <button type="button" className="fin-btn-ghost" onClick={copy}>
-      {done ? 'Copied ✓' : label}
-    </button>
+    <Button
+      variant={done ? 'success' : 'secondary'}
+      size="sm"
+      onClick={() => void copy()}
+      className={className}
+      icon={done ? <Check size={16} /> : <Copy size={16} />}
+    >
+      {done ? 'Copied' : label}
+    </Button>
   );
 }
