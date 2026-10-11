@@ -19,3 +19,10 @@ This project follows spec-driven development. Start here:
 | [06-marketplace](specs/06-marketplace.md) | Directory, inbox, proposals, accountant access |
 
 See [CLAUDE.md](CLAUDE.md) for stack, repo layout and conventions.
+
+## Como rodar
+
+O manual completo de instalação, configuração, desenvolvimento local, testes, demo
+e execução E2E está em [docs/EXECUCAO.md](docs/EXECUCAO.md).
+
+Depois de preparar o ambiente, execute `make help` para ver os comandos disponíveis.
