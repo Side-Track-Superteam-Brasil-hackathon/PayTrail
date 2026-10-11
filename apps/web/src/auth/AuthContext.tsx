@@ -7,6 +7,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (data: { email: string; password: string; name: string; role: Role }) => Promise<void>;
   logout: () => void;
+  /** Recarrega /me (ex.: depois de editar o perfil). */
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -36,12 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleAuth(await api<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(data) }));
   }, []);
 
+  const refresh = useCallback(async () => {
+    setUser(await api<User>('/me'));
+  }, []);
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, register, logout, refresh }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthState {

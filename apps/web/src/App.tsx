@@ -2,9 +2,22 @@ import type { ReactNode } from 'react';
 import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import type { Role } from './api/client';
 import { useAuth } from './auth/AuthContext';
+import { Placeholder } from './components/Placeholder';
 import { LoginPage } from './pages/LoginPage';
-import { Placeholder } from './pages/Placeholder';
 import { RegisterPage } from './pages/RegisterPage';
+import { InvoiceDetailPage } from './pages/finance/InvoiceDetailPage';
+import { InvoicesPage } from './pages/finance/InvoicesPage';
+import { NewInvoicePage } from './pages/finance/NewInvoicePage';
+import { PayPage } from './pages/finance/PayPage';
+import { ProfilePage } from './pages/finance/ProfilePage';
+import { ReportPage } from './pages/finance/ReportPage';
+import { UnmatchedPage } from './pages/finance/UnmatchedPage';
+import { VerifyPage } from './pages/finance/VerifyPage';
+import { ClientsPage } from './pages/market/ClientsPage';
+import { ConversationPage } from './pages/market/ConversationPage';
+import { DirectoryPage } from './pages/market/DirectoryPage';
+import { InboxPage } from './pages/market/InboxPage';
+import { MyAccountantsPage } from './pages/market/MyAccountantsPage';
 
 const NAV: Record<Role, { to: string; label: string }[]> = {
   FREELANCER: [
@@ -31,7 +44,8 @@ function Protected({ role, children }: { role?: Role; children: ReactNode }) {
 }
 
 function Home() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) return <p className="muted">Loading…</p>;
   if (!user) return <Navigate to="/login" replace />;
   return <Navigate to={user.role === 'FREELANCER' ? '/invoices' : '/clients'} replace />;
 }
@@ -61,26 +75,29 @@ export function App() {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Públicas */}
-          <Route path="/pay/:publicId" element={<Placeholder title="Pay invoice" spec="A2, A3 · 04-onchain (Solana Pay QR)" />} />
-          <Route path="/verify/:hash" element={<Placeholder title="Verify receipt" spec="A5 · 02-conciliacao §4" />} />
+          <Route path="/pay/:publicId" element={<PayPage />} />
+          <Route path="/verify" element={<VerifyPage />} />
+          <Route path="/verify/:hash" element={<VerifyPage />} />
 
-          {/* Freelancer */}
-          <Route path="/invoices" element={<Protected role="FREELANCER"><Placeholder title="Invoices" spec="A1 · fatia 1" /></Protected>} />
-          <Route path="/invoices/new" element={<Protected role="FREELANCER"><Placeholder title="New invoice" spec="A1 · fatia 1" /></Protected>} />
-          <Route path="/invoices/:id" element={<Protected role="FREELANCER"><Placeholder title="Invoice detail & trail" spec="A2–A5 · fatias 2–3" /></Protected>} />
-          <Route path="/payments/unmatched" element={<Protected role="FREELANCER"><Placeholder title="Unmatched payments" spec="A4 · fatia 2" /></Protected>} />
-          <Route path="/reports" element={<Protected role="FREELANCER"><Placeholder title="Monthly report" spec="02-conciliacao §5 · fatia 3" /></Protected>} />
-          <Route path="/accountants" element={<Protected role="FREELANCER"><Placeholder title="My accountants" spec="A8, A9 · fatia 6" /></Protected>} />
+          {/* Freelancer — finance */}
+          <Route path="/invoices" element={<Protected role="FREELANCER"><InvoicesPage /></Protected>} />
+          <Route path="/invoices/new" element={<Protected role="FREELANCER"><NewInvoicePage /></Protected>} />
+          <Route path="/invoices/:id" element={<Protected role="FREELANCER"><InvoiceDetailPage /></Protected>} />
+          <Route path="/payments/unmatched" element={<Protected role="FREELANCER"><UnmatchedPage /></Protected>} />
+          <Route path="/reports" element={<Protected role="FREELANCER"><ReportPage /></Protected>} />
 
-          {/* Contador */}
-          <Route path="/clients" element={<Protected role="ACCOUNTANT"><Placeholder title="My clients" spec="A7, A8 · fatia 3/6" /></Protected>} />
-          <Route path="/clients/:freelancerId/:month" element={<Protected role="ACCOUNTANT"><Placeholder title="Client monthly report" spec="A8 · fatia 3" /></Protected>} />
+          {/* Contador — relatório do cliente (mesma tela, com freelancerId) */}
+          <Route path="/clients/:freelancerId/:month" element={<Protected role="ACCOUNTANT"><ReportPage /></Protected>} />
+
+          {/* Marketplace */}
+          <Route path="/accountants" element={<Protected role="FREELANCER"><MyAccountantsPage /></Protected>} />
+          <Route path="/clients" element={<Protected role="ACCOUNTANT"><ClientsPage /></Protected>} />
+          <Route path="/directory" element={<Protected><DirectoryPage /></Protected>} />
+          <Route path="/inbox" element={<Protected><InboxPage /></Protected>} />
+          <Route path="/inbox/:conversationId" element={<Protected><ConversationPage /></Protected>} />
 
           {/* Ambos */}
-          <Route path="/profile" element={<Protected><Placeholder title="Profile & wallet" spec="PATCH /me · fatia 1" /></Protected>} />
-          <Route path="/directory" element={<Protected><Placeholder title="Directory" spec="A6 · fatia 4" /></Protected>} />
-          <Route path="/inbox" element={<Protected><Placeholder title="Inbox" spec="A6 · fatia 5" /></Protected>} />
-          <Route path="/inbox/:conversationId" element={<Protected><Placeholder title="Conversation" spec="A6, A7 · fatias 5–6" /></Protected>} />
+          <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
 
           <Route path="*" element={<Placeholder title="Not found" spec="—" />} />
         </Routes>

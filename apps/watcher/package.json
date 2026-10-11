@@ -8,7 +8,7 @@
     "start": "node --env-file=../../.env dist/index.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
     "@solana/spl-token": "0.4.9",

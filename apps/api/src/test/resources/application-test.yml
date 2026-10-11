@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/paytrail_test}
+    username: ${DB_USER:paytrail}
+    password: ${DB_PASSWORD:}
+  flyway:
+    clean-disabled: false
+
+paytrail:
+  jwt:
+    secret: test-secret-test-secret-test-secret-123456
+  internal-secret: test-internal-secret
+  bcb:
+    enabled: false
