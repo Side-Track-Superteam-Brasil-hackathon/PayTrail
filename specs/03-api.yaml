@@ -116,8 +116,10 @@ paths:
                 dueDate: { type: string, format: date }
       responses:
         '201': { content: { application/json: { schema: { $ref: '#/components/schemas/Invoice' } } } }
+        '400': { description: 'INVALID_AMOUNT (baseAmount <= 0 ou > 2 casas) | VALIDATION_ERROR' }
+        '403': { description: ROLE_REQUIRED (somente FREELANCER) }
         '409': { description: NO_UNIQUE_SUFFIX }
-        '422': { description: WALLET_NOT_SET }
+        '422': { description: 'WALLET_NOT_SET | NETWORK_NOT_SUPPORTED (MVP: só SOLANA)' }
   /invoices/{id}:
     get:
       parameters: [ { $ref: '#/components/parameters/Id' } ]
@@ -166,9 +168,10 @@ paths:
                   recipientAddress: { type: string }
                   amountToSend: { type: string, description: 'uniqueAmount − amountPaid' }
                   status: { $ref: '#/components/schemas/InvoiceStatus' }
-                  solanaPayUrl: { type: string, description: 'só SOLANA' }
+                  solanaPayUrl: { type: [string, 'null'], description: 'só SOLANA; null quando a fatura não aceita mais pagamento (status ≠ OPEN/PARTIALLY_PAID)' }
                   arcContract: { type: string, description: 'só ARC' }
                   arcInvoiceId: { type: string, description: 'bytes32, só ARC' }
+        '404': { description: NOT_FOUND }
 
   # ---------- Pagamentos ----------
   /payments:
@@ -227,6 +230,7 @@ paths:
                 properties:
                   sha256: { type: string }
                   valid: { type: boolean }
+        '400': { description: INVALID_JSON }
 
   # ---------- Relatórios ----------
   /reports/monthly:
@@ -237,6 +241,7 @@ paths:
         - { name: freelancerId, in: query, schema: { type: string, format: uuid } }
       responses:
         '200': { content: { application/json: { schema: { $ref: '#/components/schemas/MonthlyReport' } } } }
+        '400': { description: 'INVALID_MONTH | FREELANCER_ID_REQUIRED (contador sem freelancerId)' }
         '403': { description: NO_ACCESS }
   /reports/monthly.csv:
     get:
