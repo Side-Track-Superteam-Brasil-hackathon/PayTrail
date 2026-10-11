@@ -9,6 +9,7 @@ import { ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { Loading } from '../../components/Loading';
 import { PageHeader } from '../../components/PageHeader';
+import { formatUsdc } from '../finance/format';
 import { errorMessage } from './errors';
 import { currentMonth, formatBrl, formatDate } from './time';
 
@@ -67,7 +68,7 @@ export function ClientsPage() {
             <div className="bg-slate-50 rounded-xl p-4 mb-4">
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500">This month</p>
               <p className="text-2xl font-bold text-slate-900 tabular-nums mt-1">{formatBrl(c.currentMonthBrl ?? '0')}</p>
-              <p className="text-sm text-slate-500">{c.currentMonthUsdc ?? '0'} USDC</p>
+              <p className="text-sm text-slate-500">{formatUsdc(c.currentMonthUsdc ?? '0')} USDC</p>
             </div>
             {(c.unmatchedCount ?? 0) > 0 && (
               <div className="flex items-center gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">

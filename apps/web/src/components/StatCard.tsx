@@ -33,8 +33,9 @@ export function StatCard({ label, value, suffix, icon, tone = 'indigo', footer, 
       <div className="flex justify-between items-start gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500 mb-1">{label}</p>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums break-words">
-            {value}
+          <div className="text-2xl xl:text-3xl font-bold text-slate-900 tabular-nums">
+            {/* Número nunca quebra no meio; o sufixo pode ir para a linha de baixo. */}
+            <span className="whitespace-nowrap">{value}</span>
             {suffix && <span className="text-base sm:text-lg text-slate-400 font-medium ml-1.5">{suffix}</span>}
           </div>
         </div>

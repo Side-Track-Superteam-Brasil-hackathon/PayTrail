@@ -2,7 +2,8 @@ const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
 export function relativeTime(iso: string | undefined, now: number = Date.now()): string {
   if (!iso) return '';
-  const diff = (new Date(iso).getTime() - now) / 1000;
+  // Relógio do servidor pode estar um pouco adiantado: nunca mostrar tempo no futuro.
+  const diff = Math.min(0, (new Date(iso).getTime() - now) / 1000);
   const abs = Math.abs(diff);
   if (abs < 45) return 'just now';
   if (abs < 3600) return rtf.format(Math.round(diff / 60), 'minute');

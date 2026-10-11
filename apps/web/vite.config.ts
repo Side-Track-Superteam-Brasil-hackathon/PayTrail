@@ -9,6 +9,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    // No WSL com o código em /mnt/c (Windows), eventos de arquivo não chegam: usa polling.
+    watch: process.cwd().startsWith('/mnt/') ? { usePolling: true, interval: 300 } : undefined,
     proxy: {
       '/api': {
         target,
