@@ -96,6 +96,8 @@ npx tsx ../demo/pay.ts http://localhost:5173/pay/INV-XXXX --from k.json --amount
   --rpc https://api.devnet.solana.com --api http://localhost:8080/api                # devnet / parcial
 ```
 
+Dependências Node de todos os pacotes de uma vez (WSL): `bash scripts/install-deps.sh`.
+
 ## Estado do projeto
 
 MVP das fatias 1–6 completo. `mvn test` (71 testes) e `scripts/e2e.sh` (S1, S2, A1–A9 contra o validador local) passam.
