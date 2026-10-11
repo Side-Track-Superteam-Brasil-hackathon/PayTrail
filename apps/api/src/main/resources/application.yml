@@ -37,6 +37,9 @@ paytrail:
   solana:
     usdc-mint: ${SOLANA_USDC_MINT:4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU}
     cluster: ${SOLANA_CLUSTER:devnet}
+  bcb:
+    enabled: ${BCB_ENABLED:true}
+    base-url: ${BCB_BASE_URL:https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata}
   seed:
     password: ${SEED_PASSWORD:}
     ana-solana-wallet: ${SEED_ANA_SOLANA_WALLET:}
