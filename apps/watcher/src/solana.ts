@@ -11,15 +11,22 @@ const USDC_DECIMALS = 6;
  * - pela ATA de USDC de cada carteira (pagamentos de exchange, sem reference).
  */
 export class SolanaAdapter {
-  /** Última assinatura processada por endereço observado. */
+  /** Última assinatura processada (entregue à API) por endereço observado. */
   private readonly lastSeen = new Map<string, string>();
+  /** Cursores do último poll; só viram lastSeen em commit(), depois que a API aceitou as transfers. */
+  private readonly pending = new Map<string, string>();
 
   constructor(
     private readonly conn: Connection,
     private readonly usdcMint: PublicKey,
   ) {}
 
+  /**
+   * Busca transfers novas. Chame commit() depois de entregá-las à API: se a entrega falhar,
+   * o próximo poll reprocessa as mesmas assinaturas (a API é idempotente).
+   */
   async poll(wallets: string[], references: string[]): Promise<DetectedTransfer[]> {
+    this.pending.clear();
     const walletSet = new Set(wallets);
     const refSet = new Set(references);
 
@@ -35,9 +42,17 @@ export class SolanaAdapter {
         commitment: 'finalized',
         maxSupportedTransactionVersion: 0,
       });
-      if (tx) transfers.push(...this.extract(sig, tx, walletSet, refSet));
+      // Assinatura finalizada mas tx ainda indisponível no RPC: não avança o cursor, tenta no próximo poll.
+      if (!tx) throw new Error(`getParsedTransaction(${sig}) sem resultado; tentando de novo no próximo ciclo`);
+      transfers.push(...this.extract(sig, tx, walletSet, refSet));
     }
     return transfers;
+  }
+
+  /** Confirma o último poll: avança os cursores por endereço. */
+  commit(): void {
+    for (const [address, sig] of this.pending) this.lastSeen.set(address, sig);
+    this.pending.clear();
   }
 
   private usdcAta(wallet: string): string {
@@ -51,7 +66,7 @@ export class SolanaAdapter {
       { until, limit: 100 },
       'finalized',
     );
-    if (infos.length > 0) this.lastSeen.set(address, infos[0].signature);
+    if (infos.length > 0) this.pending.set(address, infos[0].signature);
     return infos.filter((i) => i.err === null).map((i) => i.signature);
   }
 

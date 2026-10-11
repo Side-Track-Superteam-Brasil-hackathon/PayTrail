@@ -63,9 +63,43 @@ cd apps/watcher && npm install && npm run dev
 cd apps/watcher && npm test
 ```
 
+### Localnet: E2E e stack de demo (WSL, sem Docker)
+
+Tudo roda no WSL com o toolchain de `scripts/wsl-env.sh` (Postgres via `scripts/pg.sh`, `solana-test-validator`).
+Do Windows: `wsl -d Ubuntu-24.04 -- bash /mnt/c/dev/<repo>/scripts/<script>.sh`. Estado local (keypairs, ledger, logs,
+segredos de dev) fica em `$HOME/.paytrail/`, nunca no repo. Mint "USDC" de teste (6 casas): keypair fixo em
+`$HOME/.paytrail/e2e/usdc-mint.json`, então o endereço não muda entre resets do ledger.
+
+```bash
+# E2E completo: validador (--reset) + mint + banco paytrail_e2e recriado + API (jar) + watcher + runner A1–A9.
+# Derruba tudo no fim; exit != 0 se algum cenário falhar. Logs em ~/.paytrail/logs/.
+bash scripts/e2e.sh
+bash scripts/e2e.sh --skip-build -- --only A2,A6      # reusa o jar; roda só A2 e A6 (+ dependências)
+bash scripts/e2e.sh --keep                            # deixa a stack no ar depois (Ctrl+C derruba)
+bash scripts/e2e.sh --watcher-smoke                   # só validador + watcher contra um stub da API (não precisa da API)
+
+# Runner contra uma stack já rodando (API_URL, SOLANA_RPC_URL, INTERNAL_SECRET opcional)
+cd tools/e2e && npm ci && npx tsx src/run.ts --api http://127.0.0.1:8080/api --rpc http://127.0.0.1:8899 [--only A1] [--timeout 60]
+cd tools/e2e && npm run typecheck
+
+# Stack de demo: validador (ledger persistente) + API perfil dev (DevSeeder, Ana com a carteira ~/.paytrail/keys/ana.json)
+# + watcher + web em http://localhost:5173. Imprime mint, carteiras e comandos. --reset zera ledger e banco.
+bash scripts/dev.sh [--reset] [--no-web] [--skip-build]
+
+# CLIs da demo (usam as dependências de tools/e2e; localnet ou devnet via --rpc/--api)
+cd tools/e2e
+npx tsx ../demo/keygen.ts ana client exchange                     # cria ~/.paytrail/keys/<nome>.json, imprime endereços
+npx tsx ../demo/fund.ts <endereço> 1000 --sol 1                    # localnet: cunha USDC de teste + airdrop
+npx tsx ../demo/pay.ts INV-XXXX --from ~/.paytrail/keys/client.json                  # paga pelo link (reference)
+npx tsx ../demo/pay.ts INV-XXXX --from ~/.paytrail/keys/exchange.json --no-reference # "exchange", sem reference
+npx tsx ../demo/pay.ts http://localhost:5173/pay/INV-XXXX --from k.json --amount 400 \
+  --rpc https://api.devnet.solana.com --api http://localhost:8080/api                # devnet / parcial
+```
+
 ## Estado do esqueleto
 
 - **API:** auth (register/login/JWT), `GET/PATCH /me`, seed de demo, schema completo (Flyway `V1__init.sql`), filtro de `/internal/**`, e motor de conciliação **puro** em `reconciliation/` (Matcher, UniqueSuffixAllocator, FxDates, TransferFilter) com testes. Faltam os serviços/controllers das fatias 1–6.
-- **Watcher:** adapter Solana completo (reference + ATA, delta de saldo). Depende de `GET /internal/watch-targets` e `POST /internal/transfers` na API.
+- **Watcher:** adapter Solana completo (reference + ATA, delta de saldo). Depende de `GET /internal/watch-targets` e `POST /internal/transfers` na API. O cursor por endereço só avança depois que a API aceita o POST (falha da API não perde transfers). Validado no localnet por `scripts/e2e.sh --watcher-smoke`.
+- **E2E:** `tools/e2e` (runner A1–A9 contra a spec 03 + watcher smoke), `scripts/e2e.sh`, `scripts/dev.sh`, `tools/demo` (pay/fund/keygen).
 - **Web:** login/cadastro com escolha de papel, navegação por papel, rotas com placeholders que apontam o cenário da spec.
 - `reference` da fatura (Solana Pay): 32 bytes aleatórios em base58. Não precisa ser uma chave no curve.

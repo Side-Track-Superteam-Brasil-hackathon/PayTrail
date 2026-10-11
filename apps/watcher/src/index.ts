@@ -12,6 +12,7 @@ async function tick(): Promise<void> {
   const targets = await getWatchTargets();
   const transfers = await solana.poll(targets.solana.wallets, targets.solana.references);
   await postTransfers(transfers);
+  solana.commit();
   if (transfers.length > 0) console.log(`[watcher] ${transfers.length} transfer(s) enviadas à API`);
 }
 

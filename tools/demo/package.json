@@ -1,0 +1,7 @@
+{
+  "name": "paytrail-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CLIs da demo (pay/fund/keygen). Sem dependências próprias: usam as de tools/e2e (rode via `cd tools/e2e && npx tsx ../demo/<script>.ts`)."
+}
