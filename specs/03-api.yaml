@@ -1,0 +1,599 @@
+openapi: 3.1.0
+info:
+  title: PayTrail API
+  version: 0.1.0
+  description: |
+    Contrato entre frontend e backend. Mudou aqui → avisar o time.
+    Auth: Bearer JWT (exceto rotas marcadas `security: []`).
+    Valores USDC são strings decimais com até 6 casas ("1500.17").
+    Erros: { "code": "NO_UNIQUE_SUFFIX", "message": "..." }.
+servers:
+  - url: http://localhost:8080/api
+security:
+  - bearer: []
+
+paths:
+  # ---------- Auth & perfil ----------
+  /auth/register:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name, role]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                name: { type: string }
+                role: { $ref: '#/components/schemas/Role' }
+      responses:
+        '201': { $ref: '#/components/responses/Auth' }
+        '409': { description: EMAIL_TAKEN }
+  /auth/login:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Auth' }
+        '401': { description: INVALID_CREDENTIALS }
+  /me:
+    get:
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                city: { type: string }
+                bio: { type: string }
+                specialties: { type: array, items: { type: string } }
+                solanaWallet: { type: string }
+                arcWallet: { type: string }
+                fxRule: { $ref: '#/components/schemas/FxRule' }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+
+  # ---------- Diretório ----------
+  /users:
+    get:
+      summary: Diretório (perfis públicos)
+      parameters:
+        - { name: role, in: query, schema: { $ref: '#/components/schemas/Role' } }
+        - { name: q, in: query, schema: { type: string }, description: busca em nome, cidade, bio, especialidades }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/PublicProfile' } }
+  /users/{id}:
+    get:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/PublicProfile' } } } }
+
+  # ---------- Faturas ----------
+  /invoices:
+    get:
+      summary: Faturas do freelancer logado
+      parameters:
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/InvoiceStatus' } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Invoice' } }
+    post:
+      summary: Criar fatura (somente FREELANCER com carteira da rede cadastrada)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clientName, description, network, baseAmount, dueDate]
+              properties:
+                clientName: { type: string }
+                clientEmail: { type: string }
+                description: { type: string }
+                network: { $ref: '#/components/schemas/Network' }
+                baseAmount: { type: string, example: '1500.00' }
+                dueDate: { type: string, format: date }
+      responses:
+        '201': { content: { application/json: { schema: { $ref: '#/components/schemas/Invoice' } } } }
+        '409': { description: NO_UNIQUE_SUFFIX }
+        '422': { description: WALLET_NOT_SET }
+  /invoices/{id}:
+    get:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Invoice'
+                  - type: object
+                    properties:
+                      payments: { type: array, items: { $ref: '#/components/schemas/Payment' } }
+                      events: { type: array, items: { $ref: '#/components/schemas/InvoiceEvent' } }
+  /invoices/{id}/cancel:
+    post:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/Invoice' } } } }
+        '409': { description: INVOICE_HAS_PAYMENTS }
+  /invoices/{id}/receipt:
+    post:
+      summary: Gera comprovante (JSON canônico + sha256)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '201': { content: { application/json: { schema: { $ref: '#/components/schemas/Receipt' } } } }
+
+  /pay/{publicId}:
+    get:
+      summary: Dados da página pública de pagamento
+      security: []
+      parameters:
+        - { name: publicId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publicId: { type: string }
+                  freelancerName: { type: string }
+                  clientName: { type: string }
+                  description: { type: string }
+                  network: { $ref: '#/components/schemas/Network' }
+                  recipientAddress: { type: string }
+                  amountToSend: { type: string, description: 'uniqueAmount − amountPaid' }
+                  status: { $ref: '#/components/schemas/InvoiceStatus' }
+                  solanaPayUrl: { type: string, description: 'só SOLANA' }
+                  arcContract: { type: string, description: 'só ARC' }
+                  arcInvoiceId: { type: string, description: 'bytes32, só ARC' }
+
+  # ---------- Pagamentos ----------
+  /payments:
+    get:
+      parameters:
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/PaymentStatus' } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Payment' } }
+  /payments/{id}/match:
+    post:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoiceId]
+              properties:
+                invoiceId: { type: string, format: uuid }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } }
+        '409': { description: PAYMENT_ALREADY_MATCHED | INVOICE_CANCELLED }
+
+  # ---------- Comprovantes ----------
+  /verify/{sha256}:
+    get:
+      security: []
+      parameters:
+        - { name: sha256, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean }
+                  receipt: { $ref: '#/components/schemas/Receipt' }
+        '404': { description: NOT_FOUND }
+  /verify:
+    post:
+      summary: Recalcula o hash de um JSON enviado e diz se bate com algum comprovante
+      security: []
+      requestBody:
+        content: { application/json: { schema: { type: object } } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sha256: { type: string }
+                  valid: { type: boolean }
+
+  # ---------- Relatórios ----------
+  /reports/monthly:
+    get:
+      summary: Freelancer vê o próprio; contador passa freelancerId (exige acesso ACTIVE cobrindo o mês)
+      parameters:
+        - { name: month, in: query, required: true, schema: { type: string, example: '2026-10' } }
+        - { name: freelancerId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/MonthlyReport' } } } }
+        '403': { description: NO_ACCESS }
+  /reports/monthly.csv:
+    get:
+      parameters:
+        - { name: month, in: query, required: true, schema: { type: string } }
+        - { name: freelancerId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { content: { text/csv: { schema: { type: string } } } }
+
+  # ---------- Contador ----------
+  /accountant/clients:
+    get:
+      summary: Clientes com acesso ACTIVE (somente ACCOUNTANT)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    freelancer: { $ref: '#/components/schemas/PublicProfile' }
+                    access: { $ref: '#/components/schemas/AccountantAccess' }
+                    currentMonthUsdc: { type: string }
+                    currentMonthBrl: { type: string }
+                    unmatchedCount: { type: integer }
+  /access:
+    get:
+      summary: Acessos concedidos (freelancer) ou recebidos (contador)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/AccountantAccess' } }
+  /access/{id}/revoke:
+    post:
+      summary: Somente o freelancer dono
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/AccountantAccess' } } } }
+  /access/{id}/logs:
+    get:
+      summary: Log de acessos do contador (visível ao freelancer)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    action: { type: string }
+                    createdAt: { type: string, format: date-time }
+
+  # ---------- Inbox ----------
+  /conversations:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Conversation' } }
+    post:
+      summary: Abre (ou retorna a existente) conversa com outro usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [participantId]
+              properties:
+                participantId: { type: string, format: uuid }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/Conversation' } } } }
+  /conversations/{id}/messages:
+    get:
+      summary: Polling — retorna mensagens com createdAt > after
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - { name: after, in: query, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Message' } }
+    post:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string, maxLength: 4000 }
+      responses:
+        '201': { content: { application/json: { schema: { $ref: '#/components/schemas/Message' } } } }
+
+  # ---------- Propostas ----------
+  /conversations/{id}/proposals:
+    post:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [feeAmount, feeCurrency, periodStart, periodEnd]
+              properties:
+                feeAmount: { type: string, example: '150.00' }
+                feeCurrency: { type: string, enum: [BRL, USDC] }
+                periodStart: { type: string, format: date }
+                periodEnd: { type: string, format: date }
+                note: { type: string }
+      responses:
+        '201': { content: { application/json: { schema: { $ref: '#/components/schemas/Proposal' } } } }
+        '409': { description: PROPOSAL_ALREADY_OPEN | ROLES_INVALID }
+  /proposals/{id}/accept:
+    post:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/Proposal' } } } }
+  /proposals/{id}/reject:
+    post:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/Proposal' } } } }
+  /proposals/{id}/cancel:
+    post:
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/Proposal' } } } }
+
+  # ---------- Interno (watcher → API) ----------
+  /internal/transfers:
+    post:
+      summary: Watcher envia transfers detectadas (header X-Internal-Secret)
+      security: []
+      parameters:
+        - { name: X-Internal-Secret, in: header, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/DetectedTransfer' }
+      responses:
+        '202': { description: aceito (processamento idempotente) }
+  /internal/watch-targets:
+    get:
+      summary: O que o watcher deve observar (carteiras e references de faturas abertas)
+      security: []
+      parameters:
+        - { name: X-Internal-Secret, in: header, required: true, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  solana:
+                    type: object
+                    properties:
+                      wallets: { type: array, items: { type: string } }
+                      references: { type: array, items: { type: string } }
+                  arc:
+                    type: object
+                    properties:
+                      wallets: { type: array, items: { type: string } }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+  responses:
+    Auth:
+      description: ok
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token: { type: string }
+              user: { $ref: '#/components/schemas/User' }
+  schemas:
+    Role: { type: string, enum: [FREELANCER, ACCOUNTANT] }
+    Network: { type: string, enum: [SOLANA, ARC], description: 'MVP: somente SOLANA. ARC reservado (roadmap).' }
+    FxRule: { type: string, enum: [CARNE_LEAO, PTAX_DAY] }
+    InvoiceStatus: { type: string, enum: [OPEN, PARTIALLY_PAID, PAID, OVERPAID, CANCELLED] }
+    PaymentStatus: { type: string, enum: [DETECTED, MATCHED, UNMATCHED, AMBIGUOUS] }
+    MatchMethod: { type: string, enum: [REFERENCE, CONTRACT_EVENT, UNIQUE_AMOUNT, MANUAL] }
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        name: { type: string }
+        city: { type: string }
+        bio: { type: string }
+        specialties: { type: array, items: { type: string } }
+        solanaWallet: { type: string }
+        arcWallet: { type: string }
+        fxRule: { $ref: '#/components/schemas/FxRule' }
+    PublicProfile:
+      type: object
+      description: Sem e-mail e sem carteiras
+      properties:
+        id: { type: string, format: uuid }
+        role: { $ref: '#/components/schemas/Role' }
+        name: { type: string }
+        city: { type: string }
+        bio: { type: string }
+        specialties: { type: array, items: { type: string } }
+    Invoice:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        publicId: { type: string }
+        clientName: { type: string }
+        clientEmail: { type: string }
+        description: { type: string }
+        network: { $ref: '#/components/schemas/Network' }
+        recipientAddress: { type: string }
+        baseAmount: { type: string }
+        uniqueAmount: { type: string }
+        amountPaid: { type: string }
+        balance: { type: string, description: 'max(0, uniqueAmount − amountPaid)' }
+        excess: { type: string, description: 'max(0, amountPaid − uniqueAmount)' }
+        dueDate: { type: string, format: date }
+        overdue: { type: boolean }
+        status: { $ref: '#/components/schemas/InvoiceStatus' }
+        payUrl: { type: string }
+        createdAt: { type: string, format: date-time }
+    Payment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        network: { $ref: '#/components/schemas/Network' }
+        txHash: { type: string }
+        explorerUrl: { type: string }
+        fromAddress: { type: string }
+        toAddress: { type: string }
+        amount: { type: string }
+        blockTime: { type: string, format: date-time }
+        invoiceId: { type: [string, 'null'], format: uuid }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        matchMethod: { $ref: '#/components/schemas/MatchMethod' }
+        unmatchedReason: { type: [string, 'null'] }
+        fxRule: { $ref: '#/components/schemas/FxRule' }
+        fxDate: { type: string, format: date }
+        fxRate: { type: string }
+        amountBrl: { type: [string, 'null'] }
+    InvoiceEvent:
+      type: object
+      properties:
+        type: { type: string }
+        payload: { type: object }
+        createdAt: { type: string, format: date-time }
+    Receipt:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        invoiceId: { type: string, format: uuid }
+        sha256: { type: string }
+        canonicalJson: { type: string }
+        verifyUrl: { type: string }
+        anchorTx: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+    MonthlyReport:
+      type: object
+      properties:
+        month: { type: string }
+        freelancerId: { type: string, format: uuid }
+        totalUsdc: { type: string }
+        totalBrl: { type: string }
+        unmatchedCount: { type: integer }
+        rows:
+          type: array
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date-time }
+              clientName: { type: string }
+              invoicePublicId: { type: string }
+              network: { $ref: '#/components/schemas/Network' }
+              txHash: { type: string }
+              explorerUrl: { type: string }
+              amountUsdc: { type: string }
+              fxRule: { $ref: '#/components/schemas/FxRule' }
+              fxDate: { type: string, format: date }
+              fxRate: { type: string }
+              amountBrl: { type: string }
+    AccountantAccess:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        accountant: { $ref: '#/components/schemas/PublicProfile' }
+        freelancer: { $ref: '#/components/schemas/PublicProfile' }
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        status: { type: string, enum: [ACTIVE, REVOKED] }
+        grantedAt: { type: string, format: date-time }
+        revokedAt: { type: [string, 'null'], format: date-time }
+    Conversation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        other: { $ref: '#/components/schemas/PublicProfile' }
+        lastMessage: { $ref: '#/components/schemas/Message' }
+        lastMessageAt: { type: string, format: date-time }
+    Message:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        conversationId: { type: string, format: uuid }
+        senderId: { type: [string, 'null'], format: uuid, description: 'null em SYSTEM' }
+        type: { type: string, enum: [TEXT, PROPOSAL, SYSTEM] }
+        body: { type: string }
+        proposal: { $ref: '#/components/schemas/Proposal' }
+        createdAt: { type: string, format: date-time }
+    Proposal:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        senderId: { type: string, format: uuid }
+        recipientId: { type: string, format: uuid }
+        accountantId: { type: string, format: uuid }
+        freelancerId: { type: string, format: uuid }
+        feeAmount: { type: string }
+        feeCurrency: { type: string, enum: [BRL, USDC] }
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        note: { type: string }
+        status: { type: string, enum: [SENT, ACCEPTED, REJECTED, CANCELLED] }
+        createdAt: { type: string, format: date-time }
+        decidedAt: { type: [string, 'null'], format: date-time }
+    DetectedTransfer:
+      type: object
+      required: [network, txHash, logIndex, token, fromAddress, toAddress, amount, blockTime]
+      properties:
+        network: { $ref: '#/components/schemas/Network' }
+        txHash: { type: string }
+        logIndex: { type: integer }
+        token: { type: string, description: 'mint (Solana) ou endereço do contrato (Arc)' }
+        fromAddress: { type: string }
+        toAddress: { type: string }
+        amount: { type: string }
+        blockTime: { type: string, format: date-time }
+        references: { type: array, items: { type: string }, description: 'Solana: contas da tx que batem com references observadas' }
+        contractInvoiceId: { type: [string, 'null'], description: 'Arc: invoiceId do evento InvoicePaid' }
