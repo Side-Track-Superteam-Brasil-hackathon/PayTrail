@@ -30,6 +30,7 @@ export const en = {
 
   // Shell do app
   'nav.main': 'Main',
+  'nav.overview': 'Overview',
   'nav.invoices': 'Invoices',
   'nav.unmatched': 'Unmatched',
   'nav.monthlyReport': 'Monthly report',
@@ -91,38 +92,6 @@ export const en = {
   'password.lower': 'One lowercase letter',
   'password.symbol': 'One symbol (e.g. ! @ # - _)',
   'password.tooLong': 'At most 72 bytes',
-
-  // Página inicial
-  'landing.login': 'Log in',
-  'landing.getStarted': 'Get started',
-  'landing.badge': 'Built on Solana',
-  'landing.title': 'Get paid in USDC. Stay compliant in Brazil.',
-  'landing.subtitle':
-    'Invoices with Solana Pay, automatic payment reconciliation, BRL conversion at the official Central Bank rate and receipts your accountant can verify.',
-  'landing.ctaPrimary': 'Create a free account',
-  'landing.ctaSecondary': 'I already have an account',
-  'landing.featuresTitle': 'Everything between the payment and your tax return',
-  'landing.f1Title': 'Invoices with Solana Pay',
-  'landing.f1Text': 'Share a payment link with a QR code. Your client pays in USDC from any wallet or exchange.',
-  'landing.f2Title': 'Automatic reconciliation',
-  'landing.f2Text': 'Every on-chain payment is matched to its invoice, including partial and exchange payments.',
-  'landing.f3Title': 'Converted to BRL',
-  'landing.f3Text': 'Each payment is converted with the PTAX rate from Banco Central, following the carnê-leão rule.',
-  'landing.f4Title': 'Verifiable receipts',
-  'landing.f4Text': 'Receipts carry a hash and the on-chain transaction, so anyone can check they are authentic.',
-  'landing.stepsTitle': 'How it works',
-  'landing.s1Title': 'Create an invoice',
-  'landing.s1Text': 'Set the amount in USDC and the due date.',
-  'landing.s2Title': 'Your client pays',
-  'landing.s2Text': 'Through the payment link, a QR code or a plain transfer.',
-  'landing.s3Title': 'Ready for your accountant',
-  'landing.s3Text': 'Monthly report in BRL with CSV export, shared with read-only access.',
-  'landing.accountantTitle': 'Are you an accountant?',
-  'landing.accountantText':
-    'Find freelancers who get paid in crypto, send proposals through the inbox and access their reconciled history with their permission.',
-  'landing.accountantCta': 'Join as an accountant',
-  'landing.verify': 'Verify a receipt',
-  'landing.footer': 'PayTrail · Superteam Brasil hackathon',
 };
 
 export const pt: Messages<typeof en> = {
@@ -151,6 +120,7 @@ export const pt: Messages<typeof en> = {
   'mock.banner': 'Modo mock: a API é simulada a partir da spec OpenAPI. Nada é salvo e os textos mostram valores de exemplo como "string".',
 
   'nav.main': 'Principal',
+  'nav.overview': 'Visão geral',
   'nav.invoices': 'Faturas',
   'nav.unmatched': 'Não conciliados',
   'nav.monthlyReport': 'Relatório mensal',
@@ -209,35 +179,4 @@ export const pt: Messages<typeof en> = {
   'password.lower': 'Uma letra minúscula',
   'password.symbol': 'Um símbolo (ex.: ! @ # - _)',
   'password.tooLong': 'No máximo 72 bytes',
-
-  'landing.login': 'Entrar',
-  'landing.getStarted': 'Começar',
-  'landing.badge': 'Feito na Solana',
-  'landing.title': 'Receba em USDC. Fique em dia no Brasil.',
-  'landing.subtitle':
-    'Faturas com Solana Pay, conciliação automática dos pagamentos, conversão para reais pela cotação oficial do Banco Central e comprovantes que seu contador pode verificar.',
-  'landing.ctaPrimary': 'Criar conta grátis',
-  'landing.ctaSecondary': 'Já tenho conta',
-  'landing.featuresTitle': 'Tudo entre o pagamento e a sua declaração',
-  'landing.f1Title': 'Faturas com Solana Pay',
-  'landing.f1Text': 'Compartilhe um link de pagamento com QR code. Seu cliente paga em USDC de qualquer carteira ou exchange.',
-  'landing.f2Title': 'Conciliação automática',
-  'landing.f2Text': 'Cada pagamento on-chain é ligado à sua fatura, inclusive pagamentos parciais e vindos de exchange.',
-  'landing.f3Title': 'Convertido para reais',
-  'landing.f3Text': 'Cada pagamento é convertido pela PTAX do Banco Central, seguindo a regra do carnê-leão.',
-  'landing.f4Title': 'Comprovantes verificáveis',
-  'landing.f4Text': 'O comprovante traz um hash e a transação on-chain, então qualquer pessoa confere que é autêntico.',
-  'landing.stepsTitle': 'Como funciona',
-  'landing.s1Title': 'Crie uma fatura',
-  'landing.s1Text': 'Defina o valor em USDC e o vencimento.',
-  'landing.s2Title': 'Seu cliente paga',
-  'landing.s2Text': 'Pelo link de pagamento, por QR code ou por uma transferência comum.',
-  'landing.s3Title': 'Pronto para o contador',
-  'landing.s3Text': 'Relatório mensal em reais com exportação CSV, compartilhado com acesso somente leitura.',
-  'landing.accountantTitle': 'Você é contador?',
-  'landing.accountantText':
-    'Encontre freelancers que recebem em cripto, envie propostas pela caixa de mensagens e acesse o histórico conciliado deles com permissão.',
-  'landing.accountantCta': 'Entrar como contador',
-  'landing.verify': 'Verificar um comprovante',
-  'landing.footer': 'PayTrail · Hackathon Superteam Brasil',
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
-  AlertTriangle, BarChart3, Briefcase, Compass, FileText, LogOut, Menu, MessageSquare, Search, Settings,
+  AlertTriangle, BarChart3, Briefcase, Compass, FileText, Home as HomeIcon, LogOut, Menu, MessageSquare, Search, Settings,
   ShieldCheck, X, type LucideIcon,
 } from 'lucide-react';
 import type { Role } from './api/client';
@@ -25,6 +25,7 @@ import { ProfilePage } from './pages/finance/ProfilePage';
 import { ReportPage } from './pages/finance/ReportPage';
 import { UnmatchedPage } from './pages/finance/UnmatchedPage';
 import { VerifyPage } from './pages/finance/VerifyPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { ClientsPage } from './pages/market/ClientsPage';
 import { ConversationPage } from './pages/market/ConversationPage';
 import { DirectoryPage } from './pages/market/DirectoryPage';
@@ -39,6 +40,7 @@ interface NavItem {
 
 const NAV: Record<Role, NavItem[]> = {
   FREELANCER: [
+    { to: '/dashboard', label: 'nav.overview', icon: HomeIcon },
     { to: '/invoices', label: 'nav.invoices', icon: FileText },
     { to: '/payments/unmatched', label: 'nav.unmatched', icon: AlertTriangle },
     { to: '/reports', label: 'nav.monthlyReport', icon: BarChart3 },
@@ -47,6 +49,7 @@ const NAV: Record<Role, NavItem[]> = {
     { to: '/accountants', label: 'nav.myAccountants', icon: ShieldCheck },
   ],
   ACCOUNTANT: [
+    { to: '/dashboard', label: 'nav.overview', icon: HomeIcon },
     { to: '/clients', label: 'nav.myClients', icon: Briefcase },
     { to: '/directory', label: 'nav.findClients', icon: Search },
     { to: '/inbox', label: 'nav.messages', icon: MessageSquare },
@@ -77,7 +80,7 @@ function Home() {
   const { user, loading } = useAuth();
   if (loading) return <Loading />;
   if (!user) return <LandingPage />;
-  return <Navigate to={user.role === 'FREELANCER' ? '/invoices' : '/clients'} replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function NotFound() {
@@ -260,6 +263,7 @@ export function App() {
   const routes = (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 

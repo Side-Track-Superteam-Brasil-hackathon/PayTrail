@@ -1,129 +1,165 @@
-import type { ReactNode } from 'react';
+import { ArrowRight, BarChart3, Check, FileCheck2, Link2, Menu, ShieldCheck, WalletCards, X } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Briefcase, FileText, Landmark, QrCode, RefreshCw, ShieldCheck } from 'lucide-react';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useI18n } from '../i18n/I18nProvider';
 import type { MessageKey } from '../i18n/messages';
 
-const FEATURES: { icon: ReactNode; title: MessageKey; text: MessageKey }[] = [
-  { icon: <QrCode size={22} />, title: 'landing.f1Title', text: 'landing.f1Text' },
-  { icon: <RefreshCw size={22} />, title: 'landing.f2Title', text: 'landing.f2Text' },
-  { icon: <Landmark size={22} />, title: 'landing.f3Title', text: 'landing.f3Text' },
-  { icon: <BadgeCheck size={22} />, title: 'landing.f4Title', text: 'landing.f4Text' },
+const FEATURES: { icon: typeof Link2; title: MessageKey; description: MessageKey }[] = [
+  { icon: Link2, title: 'landing.f1Title', description: 'landing.f1Text' },
+  { icon: BarChart3, title: 'landing.f2Title', description: 'landing.f2Text' },
+  { icon: FileCheck2, title: 'landing.f3Title', description: 'landing.f3Text' },
 ];
 
-const STEPS: { title: MessageKey; text: MessageKey }[] = [
-  { title: 'landing.s1Title', text: 'landing.s1Text' },
-  { title: 'landing.s2Title', text: 'landing.s2Text' },
-  { title: 'landing.s3Title', text: 'landing.s3Text' },
-];
-
-const primaryCta =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-900/30 hover:bg-indigo-500 transition-colors';
-const secondaryCta =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white hover:bg-white/10 transition-colors';
-
-/** Página inicial pública (specs/00 §Decisões fixadas). Usuário logado é redirecionado antes de chegar aqui. */
 export function LandingPage() {
   const { t } = useI18n();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="auth-page min-h-[100dvh] text-white">
-      <header className="max-w-6xl mx-auto flex items-center justify-between gap-3 px-4 py-5 md:px-8">
-        <Link to="/" className="text-2xl font-bold tracking-tight text-white">
-          Pay<span className="text-orange-400">Trail</span>
+    <div className="min-h-[100dvh] overflow-hidden bg-[#0a0b10] text-white">
+      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-6 sm:px-8">
+        <Link to="/" className="flex items-center gap-2.5" onClick={() => setMenuOpen(false)}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ff8a4c] shadow-[0_0_24px_rgba(255,138,76,0.35)]">
+            <WalletCards size={19} strokeWidth={2.5} />
+          </span>
+          <span className="text-xl font-semibold tracking-tight">PayTrail</span>
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <LanguageSwitcher />
-          <Link to="/login" className="hidden sm:inline-flex px-3 py-2 text-sm font-semibold text-slate-200 hover:text-white">
-            {t('landing.login')}
-          </Link>
-          <Link to="/register" className="inline-flex rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-400">
+
+        <nav className="hidden items-center gap-8 text-sm text-white/65 md:flex" aria-label={t('landing.nav')}>
+          <a href="#how-it-works" className="transition-colors hover:text-white">{t('landing.howItWorks')}</a>
+          <a href="#features" className="transition-colors hover:text-white">{t('landing.features')}</a>
+          <Link to="/login" className="transition-colors hover:text-white">{t('landing.login')}</Link>
+          <Link to="/register" className="rounded-xl bg-[#ff8a4c] px-4 py-2.5 font-medium text-white transition hover:bg-[#ffa06e]">
             {t('landing.getStarted')}
           </Link>
+          <LanguageSwitcher />
+        </nav>
+
+        <div className="flex items-center gap-2 md:hidden">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            className="rounded-lg p-2 text-white/75"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </header>
 
+      {menuOpen && (
+        <nav className="relative z-10 mx-5 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur md:hidden" aria-label={t('landing.navMobile')}>
+          <div className="flex flex-col gap-1 text-sm">
+            <a href="#how-it-works" className="rounded-lg px-3 py-2.5 text-white/75 hover:bg-white/10 hover:text-white" onClick={() => setMenuOpen(false)}>{t('landing.howItWorks')}</a>
+            <a href="#features" className="rounded-lg px-3 py-2.5 text-white/75 hover:bg-white/10 hover:text-white" onClick={() => setMenuOpen(false)}>{t('landing.features')}</a>
+            <Link to="/login" className="rounded-lg px-3 py-2.5 text-white/75 hover:bg-white/10 hover:text-white">{t('landing.login')}</Link>
+            <Link to="/register" className="mt-2 rounded-xl bg-[#ff8a4c] px-3 py-2.5 text-center font-medium text-white transition hover:bg-[#ffa06e]">{t('landing.getStarted')}</Link>
+          </div>
+        </nav>
+      )}
+
       <main>
-        <section className="max-w-6xl mx-auto px-4 pt-12 pb-16 md:px-8 md:pt-20 md:pb-24">
-          <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-300">
-              <ShieldCheck size={14} /> {t('landing.badge')}
-            </span>
-            <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl">
-              {t('landing.title')}
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg text-slate-300">{t('landing.subtitle')}</p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link to="/register" className={primaryCta}>
-                {t('landing.ctaPrimary')} <ArrowRight size={18} />
-              </Link>
-              <Link to="/login" className={secondaryCta}>
-                {t('landing.ctaSecondary')}
-              </Link>
+        <section className="relative mx-auto max-w-7xl px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:pb-32 lg:pt-28">
+          <div className="pointer-events-none absolute -left-32 top-0 h-96 w-96 rounded-full bg-[#e9612c]/20 blur-3xl" />
+          <div className="pointer-events-none absolute right-0 top-20 h-80 w-80 rounded-full bg-[#7048ff]/15 blur-3xl" />
+          <div className="relative grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#ffb078]/25 bg-[#ffb078]/10 px-3.5 py-2 text-xs font-medium text-[#ffc39e]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#ff9a63]" />
+                {t('landing.badge')}
+              </div>
+              <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+                {t('landing.titleStart')} <span className="text-[#ff9a63]">{t('landing.titleHighlight')}</span>
+              </h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-white/60 sm:text-xl">
+                {t('landing.subtitle')}
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff8a4c] px-5 py-3.5 font-medium text-[#1b100b] shadow-[0_8px_30px_rgba(255,138,76,0.25)] transition hover:bg-[#ffa06e]">
+                  {t('landing.ctaPrimary')} <ArrowRight size={18} />
+                </Link>
+                <a href="#how-it-works" className="inline-flex items-center justify-center rounded-xl border border-white/15 px-5 py-3.5 font-medium text-white/80 transition hover:border-white/30 hover:text-white">
+                  {t('landing.ctaSecondary')}
+                </a>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/45">
+                <span className="flex items-center gap-2"><Check size={15} className="text-[#ff9a63]" /> {t('landing.fundsStay')}</span>
+                <span className="flex items-center gap-2"><Check size={15} className="text-[#ff9a63]" /> {t('landing.builtOnSolana')}</span>
+              </div>
+            </div>
+
+            <div className="relative mx-auto w-full max-w-md lg:ml-auto">
+              <div className="absolute -inset-5 rounded-[2rem] bg-gradient-to-br from-[#ff8a4c]/20 to-[#7c5cff]/10 blur-2xl" />
+              <div className="relative rounded-[1.75rem] border border-white/15 bg-[#15151d]/90 p-5 shadow-2xl backdrop-blur">
+                <div className="flex items-center justify-between border-b border-white/10 pb-5">
+                  <div>
+                    <p className="text-xs text-white/45">{t('landing.cardKicker')}</p>
+                    <p className="mt-1 text-lg font-medium">{t('landing.cardTitle')}</p>
+                  </div>
+                  <span className="rounded-lg bg-[#ff8a4c]/15 px-2.5 py-1 text-xs font-medium text-[#ffb58d]">USDC</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 py-7">
+                  <div className="rounded-xl bg-white/[0.06] p-3.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#ff8a4c]/15 text-[#ff9a63]"><Link2 size={17} /></div>
+                    <p className="mt-5 text-xl font-semibold">{t('landing.stat1Value')}</p>
+                    <p className="mt-1 text-xs leading-5 text-white/45">{t('landing.stat1Text')}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.06] p-3.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#ffc078]/15 text-[#ffc078]"><BarChart3 size={17} /></div>
+                    <p className="mt-5 text-xl font-semibold">USDC <span className="text-sm text-white/40">→ BRL</span></p>
+                    <p className="mt-1 text-xs leading-5 text-white/45">{t('landing.stat2Text')}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.06] p-3.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#9ee6bd]/10 text-[#9ee6bd]"><ShieldCheck size={17} /></div>
+                    <p className="mt-5 text-xl font-semibold">{t('landing.stat3Value')}</p>
+                    <p className="mt-1 text-xs leading-5 text-white/45">{t('landing.stat3Text')}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-white/[0.06] px-4 py-3 text-sm text-white/60">
+                  <Check size={16} className="text-[#9ee6bd]" />
+                  {t('landing.cardFooter')}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="max-w-6xl mx-auto px-4 pb-16 md:px-8">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('landing.featuresTitle')}</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-2xl border border-white/10 bg-black/40 p-6 backdrop-blur">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500/15 text-orange-300">
-                  {f.icon}
-                </div>
-                <h3 className="mt-4 font-semibold text-white">{t(f.title)}</h3>
-                <p className="mt-2 text-sm text-slate-300">{t(f.text)}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="max-w-6xl mx-auto px-4 pb-16 md:px-8">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('landing.stepsTitle')}</h2>
-          <ol className="mt-8 grid gap-4 md:grid-cols-3">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="flex gap-4 rounded-2xl border border-white/10 bg-black/40 p-6 backdrop-blur">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 font-bold">
-                  {i + 1}
-                </span>
-                <div>
-                  <h3 className="font-semibold text-white">{t(s.title)}</h3>
-                  <p className="mt-1 text-sm text-slate-300">{t(s.text)}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="max-w-6xl mx-auto px-4 pb-20 md:px-8">
-          <div className="flex flex-col gap-6 rounded-3xl border border-emerald-400/20 bg-emerald-950/40 p-6 backdrop-blur sm:p-10 md:flex-row md:items-center md:justify-between">
-            <div className="flex gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
-                <Briefcase size={24} />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold sm:text-2xl">{t('landing.accountantTitle')}</h2>
-                <p className="mt-2 max-w-xl text-slate-300">{t('landing.accountantText')}</p>
-              </div>
+        <section id="how-it-works" className="bg-white/[0.025]">
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
+            <div className="max-w-xl">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#ff9a63]">{t('landing.sectionKicker')}</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t('landing.sectionTitle')}</h2>
+              <p className="mt-4 leading-7 text-white/55">{t('landing.sectionText')}</p>
             </div>
-            <Link
-              to="/register"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white hover:bg-emerald-500"
-            >
-              {t('landing.accountantCta')} <ArrowRight size={18} />
-            </Link>
+            <div id="features" className="mt-12 grid gap-4 md:grid-cols-3">
+              {FEATURES.map(({ icon: Icon, title, description }, index) => (
+                <article key={title} className="rounded-2xl border border-white/10 bg-[#111219] p-6">
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#ff8a4c]/10 text-[#ff9a63]"><Icon size={21} /></span>
+                    <span className="text-sm text-white/25">0{index + 1}</span>
+                  </div>
+                  <h3 className="mt-7 text-lg font-medium">{t(title)}</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/50">{t(description)}</p>
+                </article>
+              ))}
+            </div>
           </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-20 text-center sm:px-8 lg:py-28">
+          <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#ff9a63]">{t('landing.ctaKicker')}</p>
+          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">{t('landing.ctaTitle')}</h2>
+          <p className="mx-auto mt-5 max-w-xl text-white/55">{t('landing.ctaText')}</p>
+          <Link to="/register" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#ff8a4c] px-5 py-3.5 font-medium text-white transition hover:bg-[#ffa06e]">{t('landing.getStarted')} <ArrowRight size={18} /></Link>
         </section>
       </main>
 
-      <footer className="border-t border-white/10">
-        <div className="max-w-6xl mx-auto flex flex-col gap-3 px-4 py-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between md:px-8">
-          <span>{t('landing.footer')}</span>
-          <Link to="/verify" className="inline-flex items-center gap-1.5 hover:text-white">
-            <FileText size={16} /> {t('landing.verify')}
-          </Link>
+      <footer className="px-5 py-7 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm text-white/35 sm:flex-row sm:items-center sm:justify-between">
+          <span>© {new Date().getFullYear()} PayTrail</span>
+          <span>{t('landing.footerTagline')}</span>
         </div>
       </footer>
     </div>
