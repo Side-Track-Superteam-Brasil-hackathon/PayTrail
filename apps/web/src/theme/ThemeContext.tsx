@@ -15,9 +15,10 @@ function getInitialTheme(): Theme {
     const saved = localStorage.getItem(THEME_KEY);
     if (saved === 'light' || saved === 'dark') return saved;
   } catch {
-    // Use the system preference when storage is unavailable.
+    // Default to the light product palette unless the user explicitly saved another theme.
   }
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+  return 'light';
 }
 
 function applyTheme(theme: Theme) {
