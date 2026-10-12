@@ -39,7 +39,7 @@ export function LoginPage() {
       </div>
       <div className="auth-panel bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">PayTrail</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">PayTrail</h1>
           <p className="text-slate-500 mt-2">{t('login.tagline')}</p>
         </div>
 
@@ -67,7 +67,7 @@ export function LoginPage() {
             />
           </Field>
           {error && <Alert>{error}</Alert>}
-          <Button type="submit" disabled={busy} className="w-full mt-2">
+          <Button type="submit" variant="orange" disabled={busy} className="w-full mt-2">
             {busy ? t('login.submitting') : t('login.submit')}
           </Button>
         </form>
