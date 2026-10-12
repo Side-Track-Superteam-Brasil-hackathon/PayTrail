@@ -127,9 +127,7 @@ export function RegisterPage() {
       </div>
       <div className="max-w-3xl w-full">
         <div className="text-center mb-8 sm:mb-10">
-          <Link to="/" className="inline-block text-indigo-600 font-bold text-xl tracking-tight mb-3">
-            PayTrail
-          </Link>
+          <p className="text-indigo-600 font-bold text-xl tracking-tight mb-3">PayTrail</p>
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{t('register.title')}</h2>
           <p className="text-slate-500 mt-2">{t('register.subtitle')}</p>
         </div>
@@ -216,12 +214,7 @@ export function RegisterPage() {
               />
             </Field>
             {error && <Alert>{error}</Alert>}
-            <Button
-              type="submit"
-              variant={accountant ? 'emerald' : 'accent'}
-              disabled={busy || !strong || confirm !== form.password}
-              className="w-full"
-            >
+            <Button type="submit" variant={accountant ? 'emerald' : 'accent'} disabled={busy} className="w-full">
               {busy ? t('register.creating') : accountant ? t('register.createAccountant') : t('register.createFreelancer')}
             </Button>
             <p className="text-center text-sm text-slate-500">
