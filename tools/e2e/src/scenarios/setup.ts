@@ -107,7 +107,8 @@ export function setupScenarios(ctx: Ctx): Scenario[] {
 }
 
 function randomPassword(): string {
-  return randomBytes(12).toString('hex');
+  // hex aleatório + sufixo que garante a política (maiúscula, minúscula, número, símbolo)
+  return `${randomBytes(12).toString('hex')}Aa1!`;
 }
 
 /** Cadastra e confere o login com a mesma senha (gerada por execução, nunca impressa). */

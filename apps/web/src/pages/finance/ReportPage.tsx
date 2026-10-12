@@ -11,11 +11,13 @@ import { Loading } from '../../components/Loading';
 import { PageHeader } from '../../components/PageHeader';
 import { StatCard } from '../../components/StatCard';
 import { TBody, THead, Table, Td, Th } from '../../components/Table';
+import { useI18n } from '../../i18n/I18nProvider';
 import {
   currentMonth, errorMessage, formatBrl, formatDate, formatDateTime, formatRate, formatUsdc, shortAddr,
 } from './format';
 
 export function ReportPage() {
+  const { t } = useI18n();
   const { freelancerId, month: monthParam } = useParams<{ freelancerId?: string; month?: string }>();
   const navigate = useNavigate();
   const [localMonth, setLocalMonth] = useState(currentMonth());
@@ -58,7 +60,7 @@ export function ReportPage() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.status === 403) { setNoAccess(true); return; }
-      if (!res.ok) throw new Error(`Export failed (${res.status})`);
+      if (!res.ok) throw new Error(t('report.exportFailed', { status: res.status }));
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement('a');
       a.href = url;
@@ -77,16 +79,16 @@ export function ReportPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        back={freelancerId ? { to: '/clients', label: 'My clients' } : undefined}
-        title="Monthly report"
-        subtitle="Payments received in the month, converted to BRL."
+        back={freelancerId ? { to: '/clients', label: t('nav.myClients') } : undefined}
+        title={t('report.title')}
+        subtitle={t('report.subtitle')}
         actions={
           <>
             <input
               type="month"
               value={month}
               onChange={(e) => changeMonth(e.target.value)}
-              aria-label="Month"
+              aria-label={t('report.month')}
               className={`${inputBase} px-3 py-2`}
             />
             <Button
@@ -94,15 +96,15 @@ export function ReportPage() {
               disabled={exporting || noAccess}
               icon={<Download size={18} />}
             >
-              {exporting ? 'Exporting…' : 'Export CSV'}
+              {exporting ? t('report.exporting') : t('report.exportCsv')}
             </Button>
           </>
         }
       />
 
       {noAccess && (
-        <EmptyState icon={<Lock size={26} />} title="No access">
-          You do not have access to this report for the selected month. Access may have been revoked or may not cover this period.
+        <EmptyState icon={<Lock size={26} />} title={t('report.noAccessTitle')}>
+          {t('report.noAccessText')}
         </EmptyState>
       )}
       {error && <Alert>{error}</Alert>}
@@ -111,27 +113,29 @@ export function ReportPage() {
       {report && (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <StatCard label="Total USDC" value={formatUsdc(report.totalUsdc)} suffix="USDC" icon={<Coins size={24} />} tone="indigo" />
-            <StatCard label="Total BRL" value={formatBrl(report.totalBrl)} icon={<Banknote size={24} />} tone="emerald" />
-            <StatCard label="Payments" value={report.rows?.length ?? 0} icon={<Receipt size={24} />} tone="slate" />
+            <StatCard label={t('report.totalUsdc')} value={formatUsdc(report.totalUsdc)} suffix="USDC" icon={<Coins size={24} />} tone="indigo" />
+            <StatCard label={t('report.totalBrl')} value={formatBrl(report.totalBrl)} icon={<Banknote size={24} />} tone="emerald" />
+            <StatCard label={t('report.payments')} value={report.rows?.length ?? 0} icon={<Receipt size={24} />} tone="slate" />
           </div>
 
           {(report.unmatchedCount ?? 0) > 0 && (
             <Alert tone="warning">
-              {report.unmatchedCount} unmatched payment{report.unmatchedCount === 1 ? '' : 's'} not included in this report.
-              {!freelancerId && <> <Link to="/payments/unmatched">Review them</Link>.</>}
+              {t(report.unmatchedCount === 1 ? 'report.unmatchedOne' : 'report.unmatchedOther', { count: report.unmatchedCount ?? 0 })}
+              {!freelancerId && <> <Link to="/payments/unmatched">{t('report.reviewThem')}</Link>.</>}
             </Alert>
           )}
 
           {(report.rows?.length ?? 0) === 0 ? (
-            <EmptyState icon={<BarChart3 size={26} />} title={`No payments in ${month}`}>
-              Payments matched to invoices in this month will show up here.
+            <EmptyState icon={<BarChart3 size={26} />} title={t('report.emptyTitle', { month })}>
+              {t('report.emptyText')}
             </EmptyState>
           ) : (
             <Table>
               <THead>
-                <Th>Date</Th><Th>Client</Th><Th>Invoice</Th><Th>Tx</Th><Th num>USDC</Th>
-                <Th>FX rule</Th><Th>FX date</Th><Th num>Rate</Th><Th num>BRL</Th>
+                <Th>{t('report.colDate')}</Th><Th>{t('report.colClient')}</Th><Th>{t('report.colInvoice')}</Th>
+                <Th>{t('report.colTx')}</Th><Th num>{t('report.colUsdc')}</Th>
+                <Th>{t('report.colFxRule')}</Th><Th>{t('report.colFxDate')}</Th>
+                <Th num>{t('report.colRate')}</Th><Th num>{t('report.colBrl')}</Th>
               </THead>
               <TBody>
                 {report.rows!.map((r, i) => (
@@ -147,7 +151,7 @@ export function ReportPage() {
                       ) : shortAddr(r.txHash)}
                     </Td>
                     <Td num className="font-medium text-slate-900">{formatUsdc(r.amountUsdc)}</Td>
-                    <Td className="whitespace-nowrap">{r.fxRule === 'CARNE_LEAO' ? 'Carnê-leão' : 'PTAX day'}</Td>
+                    <Td className="whitespace-nowrap">{r.fxRule === 'CARNE_LEAO' ? t('report.ruleCarneLeao') : t('report.rulePtaxDay')}</Td>
                     <Td className="whitespace-nowrap">{formatDate(r.fxDate)}</Td>
                     <Td num>{formatRate(r.fxRate)}</Td>
                     <Td num className="font-medium text-slate-900">{formatBrl(r.amountBrl)}</Td>

@@ -1,12 +1,17 @@
 import { ApiError } from '../../api/client';
+import { translate } from '../../i18n/I18nProvider';
+import type { MessageKey } from '../../i18n/messages';
 
-const FRIENDLY: Record<string, string> = {
-  PROPOSAL_ALREADY_OPEN: 'There is already an open proposal in this conversation. Wait for a response or cancel it first.',
-  ROLES_INVALID: 'Proposals can only be exchanged between a freelancer and an accountant.',
-  NO_ACCESS: 'You do not have access to this data.',
+const FRIENDLY: Record<string, MessageKey> = {
+  PROPOSAL_ALREADY_OPEN: 'market.error.proposalAlreadyOpen',
+  ROLES_INVALID: 'market.error.rolesInvalid',
+  NO_ACCESS: 'market.error.noAccess',
 };
 
 export function errorMessage(e: unknown): string {
-  if (e instanceof ApiError) return FRIENDLY[e.code] ?? e.message;
-  return e instanceof Error ? e.message : 'Something went wrong';
+  if (e instanceof ApiError) {
+    const key = FRIENDLY[e.code];
+    return key ? translate(key) : e.message;
+  }
+  return e instanceof Error ? e.message : translate('common.unexpectedError');
 }

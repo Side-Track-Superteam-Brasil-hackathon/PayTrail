@@ -7,6 +7,8 @@ import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { Card, CardTitle } from '../../components/Card';
 import { inputClass } from '../../components/Field';
+import { LanguageSwitcher } from '../../components/LanguageSwitcher';
+import { useI18n } from '../../i18n/I18nProvider';
 import { errorMessage } from './format';
 
 interface VerifyHashResponse { valid?: boolean; receipt?: Receipt }
@@ -35,6 +37,7 @@ function Verdict({ valid, children }: { valid: boolean; children: string }) {
 }
 
 export function VerifyPage() {
+  const { t, locale } = useI18n();
   const { hash } = useParams<{ hash?: string }>();
   const navigate = useNavigate();
   const [hashInput, setHashInput] = useState(hash ?? '');
@@ -79,7 +82,7 @@ export function VerifyPage() {
     try {
       parsed = JSON.parse(pasted);
     } catch {
-      setPasteError('This is not valid JSON.');
+      setPasteError(t('verify.invalidJson'));
       return;
     }
     try {
@@ -90,49 +93,50 @@ export function VerifyPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] px-4 py-8 sm:py-12">
+    <div className="relative min-h-[100dvh] px-4 py-8 sm:py-12">
+      <LanguageSwitcher className="absolute top-4 right-4" />
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center">
           <Link to="/" className="text-2xl font-bold tracking-tight text-indigo-600">PayTrail</Link>
           <div className="mx-auto mt-6 w-14 h-14 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
             <ShieldCheck size={28} />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-4">Verify a receipt</h1>
-          <p className="text-slate-500 mt-2">Check that a PayTrail receipt is authentic and has not been changed.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-4">{t('verify.title')}</h1>
+          <p className="text-slate-500 mt-2">{t('verify.subtitle')}</p>
         </div>
 
         <Card>
-          <CardTitle icon={<Hash size={18} />}>By hash</CardTitle>
+          <CardTitle icon={<Hash size={18} />}>{t('verify.byHash')}</CardTitle>
           <form onSubmit={lookup} className="flex flex-col sm:flex-row gap-2">
             <input
               className={`${inputClass} font-mono text-sm`}
               value={hashInput}
               onChange={(e) => setHashInput(e.target.value)}
-              placeholder="SHA-256 of the receipt"
-              aria-label="Receipt hash"
+              placeholder={t('verify.hashPlaceholder')}
+              aria-label={t('verify.hashLabel')}
               spellCheck={false}
             />
-            <Button type="submit" variant="accent" className="shrink-0">Verify</Button>
+            <Button type="submit" variant="accent" className="shrink-0">{t('verify.submit')}</Button>
           </form>
 
           <div className="mt-4 space-y-3 empty:hidden">
             {loading && (
               <p className="flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 size={16} className="animate-spin" /> Checking…
+                <Loader2 size={16} className="animate-spin" /> {t('verify.checking')}
               </p>
             )}
             {error && <Alert>{error}</Alert>}
-            {notFound && <Verdict valid={false}>No receipt with this hash.</Verdict>}
+            {notFound && <Verdict valid={false}>{t('verify.notFound')}</Verdict>}
             {result && (
               <>
                 {result.valid
-                  ? <Verdict valid>Valid receipt — the hash matches a receipt issued by PayTrail.</Verdict>
-                  : <Verdict valid={false}>Invalid receipt.</Verdict>}
+                  ? <Verdict valid>{t('verify.valid')}</Verdict>
+                  : <Verdict valid={false}>{t('verify.invalid')}</Verdict>}
                 {result.receipt && (
                   <>
                     <p className="text-sm text-slate-500 break-all">
-                      Issued {new Date(result.receipt.createdAt ?? '').toLocaleString('en-US')}
-                      {result.receipt.anchorTx ? ` · anchored in tx ${result.receipt.anchorTx}` : ''}
+                      {t('verify.issued', { date: new Date(result.receipt.createdAt ?? '').toLocaleString(locale) })}
+                      {result.receipt.anchorTx ? t('verify.anchored', { tx: result.receipt.anchorTx }) : ''}
                     </p>
                     <pre className="bg-slate-900 text-slate-100 rounded-xl p-4 overflow-x-auto text-xs leading-relaxed">
                       {pretty(result.receipt.canonicalJson ?? '')}
@@ -145,9 +149,9 @@ export function VerifyPage() {
         </Card>
 
         <Card>
-          <CardTitle icon={<FileJson size={18} />}>By receipt JSON</CardTitle>
+          <CardTitle icon={<FileJson size={18} />}>{t('verify.byJson')}</CardTitle>
           <p className="text-sm text-slate-500 -mt-2 mb-4">
-            Paste a receipt JSON. We recompute its hash and check it against issued receipts. Any change makes it invalid.
+            {t('verify.jsonText')}
           </p>
           <form onSubmit={verifyPasted} className="space-y-3">
             <textarea
@@ -156,11 +160,11 @@ export function VerifyPage() {
               onChange={(e) => setPasted(e.target.value)}
               className={`${inputClass} font-mono text-xs`}
               placeholder="{ ... }"
-              aria-label="Receipt JSON"
+              aria-label={t('verify.jsonLabel')}
               spellCheck={false}
             />
             <div className="flex justify-end">
-              <Button type="submit" disabled={!pasted.trim()}>Verify JSON</Button>
+              <Button type="submit" disabled={!pasted.trim()}>{t('verify.submitJson')}</Button>
             </div>
           </form>
           <div className="mt-4 space-y-3 empty:hidden">
@@ -168,8 +172,8 @@ export function VerifyPage() {
             {pasteResult && (
               <>
                 {pasteResult.valid
-                  ? <Verdict valid>Valid — this JSON matches an issued receipt.</Verdict>
-                  : <Verdict valid={false}>Invalid — this JSON does not match any issued receipt.</Verdict>}
+                  ? <Verdict valid>{t('verify.jsonValid')}</Verdict>
+                  : <Verdict valid={false}>{t('verify.jsonInvalid')}</Verdict>}
                 {pasteResult.sha256 && <p className="text-xs text-slate-500 font-mono break-all">sha256: {pasteResult.sha256}</p>}
               </>
             )}

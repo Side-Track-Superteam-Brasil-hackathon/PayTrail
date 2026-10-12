@@ -1,12 +1,15 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Briefcase, CheckCircle, User } from 'lucide-react';
-import type { Role } from '../api/client';
+import { Briefcase, Check, CheckCircle, Circle, Eye, EyeOff, User } from 'lucide-react';
+import { ApiError, type Role } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { isStrongPassword, PASSWORD_RULES, PASSWORD_TOO_LONG } from '../auth/passwordPolicy';
 import { Alert } from '../components/Alert';
 import { Button } from '../components/Button';
 import { cx } from '../components/cx';
 import { Field, inputClass } from '../components/Field';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface RoleCardProps {
   selected: boolean;
@@ -56,96 +59,175 @@ function RoleCard({ selected, onSelect, icon, title, text, tone }: RoleCardProps
   );
 }
 
+function PasswordChecklist({ password }: { password: string }) {
+  const { t } = useI18n();
+  const rules = PASSWORD_TOO_LONG.ok(password) ? PASSWORD_RULES : [...PASSWORD_RULES, PASSWORD_TOO_LONG];
+  return (
+    <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs" aria-label={t('password.requirements')}>
+      {rules.map((r) => {
+        const ok = r.ok(password);
+        return (
+          <li key={r.key} className={cx('flex items-center gap-1.5', ok ? 'text-emerald-600' : 'text-slate-500')}>
+            {ok ? <Check size={14} className="shrink-0" /> : <Circle size={10} className="shrink-0 mx-0.5" />}
+            {t(r.key)}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function RegisterPage() {
   const { register } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'FREELANCER' as Role });
+  const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
   const setRole = (role: Role) => setForm({ ...form, role });
 
+  const strong = isStrongPassword(form.password);
+  const mismatch = confirm.length > 0 && confirm !== form.password;
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!strong) {
+      setError(t('register.weakPassword'));
+      return;
+    }
+    if (confirm !== form.password) {
+      setError(t('register.passwordsDontMatch'));
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       await register(form);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign up failed');
+      if (err instanceof ApiError && err.code === 'EMAIL_TAKEN') setError(t('register.emailTaken'));
+      else if (err instanceof ApiError && err.code === 'WEAK_PASSWORD') setError(t('register.weakPassword'));
+      else setError(err instanceof Error ? err.message : t('register.failed'));
     } finally {
       setBusy(false);
     }
   }
 
   const accountant = form.role === 'ACCOUNTANT';
+  const passwordType = showPassword ? 'text' : 'password';
 
   return (
     <div className="auth-page min-h-[100dvh] flex items-center justify-center p-4 py-10">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="max-w-3xl w-full">
         <div className="text-center mb-8 sm:mb-10">
-          <p className="text-indigo-600 font-bold text-xl tracking-tight mb-3">PayTrail</p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">How do you want to use PayTrail?</h2>
-          <p className="text-slate-500 mt-2">Choose your profile to personalize your experience.</p>
+          <Link to="/" className="inline-block text-indigo-600 font-bold text-xl tracking-tight mb-3">
+            PayTrail
+          </Link>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{t('register.title')}</h2>
+          <p className="text-slate-500 mt-2">{t('register.subtitle')}</p>
         </div>
 
         <form onSubmit={onSubmit}>
-          <div className="grid md:grid-cols-2 gap-4 sm:gap-6" role="radiogroup" aria-label="I am a…">
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6" role="radiogroup" aria-label={t('register.iAm')}>
             <RoleCard
               tone="indigo"
               selected={form.role === 'FREELANCER'}
               onSelect={() => setRole('FREELANCER')}
               icon={<User size={36} />}
-              title="I'm a service provider"
-              text="Issue invoices, get paid in USDC and find accountants to organize your finances."
+              title={t('register.freelancerTitle')}
+              text={t('register.freelancerText')}
             />
             <RoleCard
               tone="emerald"
               selected={accountant}
               onSelect={() => setRole('ACCOUNTANT')}
               icon={<Briefcase size={36} />}
-              title="I'm an accountant"
-              text="Find Web3 clients, send proposals and securely access their accounting history."
+              title={t('register.accountantTitle')}
+              text={t('register.accountantText')}
             />
           </div>
 
           <div className="auth-panel bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 mt-6 max-w-md mx-auto space-y-4">
-            <h3 className="font-semibold text-slate-900">Create your account</h3>
-            <Field label="Name">
+            <h3 className="font-semibold text-slate-900">{t('register.formTitle')}</h3>
+            <Field label={t('common.name')}>
               <input className={inputClass} autoComplete="name" value={form.name} onChange={set('name')} required />
             </Field>
-            <Field label="Email">
+            <Field label={t('common.email')}>
               <input
                 type="email"
                 autoComplete="email"
-                placeholder="you@email.com"
+                placeholder={t('register.emailPlaceholder')}
                 className={inputClass}
                 value={form.email}
                 onChange={set('email')}
                 required
               />
             </Field>
-            <Field label="Password" hint="At least 8 characters.">
+            <div>
+              <Field label={t('common.password')}>
+                <div className="relative">
+                  <input
+                    type={passwordType}
+                    autoComplete="new-password"
+                    className={cx(inputClass, 'pr-11')}
+                    value={form.password}
+                    onChange={set('password')}
+                    aria-invalid={form.password.length > 0 && !strong}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-700"
+                    aria-label={showPassword ? t('register.hidePassword') : t('register.showPassword')}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </Field>
+              <PasswordChecklist password={form.password} />
+            </div>
+            <Field
+              label={t('register.confirmPassword')}
+              hint={
+                confirm.length === 0 ? undefined : mismatch ? (
+                  <span className="text-red-600">{t('register.passwordsDontMatch')}</span>
+                ) : (
+                  <span className="text-emerald-600">{t('register.passwordsMatch')}</span>
+                )
+              }
+            >
               <input
-                type="password"
+                type={passwordType}
                 autoComplete="new-password"
-                minLength={8}
                 className={inputClass}
-                value={form.password}
-                onChange={set('password')}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                aria-invalid={mismatch}
                 required
               />
             </Field>
             {error && <Alert>{error}</Alert>}
-            <Button type="submit" variant={accountant ? 'emerald' : 'accent'} disabled={busy} className="w-full">
-              {busy ? 'Creating…' : accountant ? 'Create accountant account' : 'Create freelancer account'}
+            <Button
+              type="submit"
+              variant={accountant ? 'emerald' : 'accent'}
+              disabled={busy || !strong || confirm !== form.password}
+              className="w-full"
+            >
+              {busy ? t('register.creating') : accountant ? t('register.createAccountant') : t('register.createFreelancer')}
             </Button>
             <p className="text-center text-sm text-slate-500">
-              Already have an account?{' '}
+              {t('register.haveAccount')}{' '}
               <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-800">
-                Log in
+                {t('register.logIn')}
               </Link>
             </p>
           </div>

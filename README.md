@@ -19,3 +19,21 @@ This project follows spec-driven development. Start here:
 | [06-marketplace](specs/06-marketplace.md) | Directory, inbox, proposals, accountant access |
 
 See [CLAUDE.md](CLAUDE.md) for stack, repo layout and conventions.
+
+## Running locally
+
+The real app needs four pieces: **Postgres**, the **API** (Spring Boot, port 8080), the **watcher** (reads Solana and reports payments to the API) and the **web** app (port 5173). This is the setup used for the demo and for production. Data is saved, invoices persist and each account keeps the role chosen at sign up.
+
+```bash
+cp .env.example .env                       # fill in passwords and secrets
+docker compose --env-file .env -f infra/docker-compose.yml up -d
+cd apps/api && set -a && . ../../.env && set +a && mvn spring-boot:run -Dspring-boot.run.profiles=dev
+cd apps/watcher && npm install && npm run dev
+cd apps/web && npm install && npm run dev  # open http://localhost:5173
+```
+
+On Windows with WSL (no Docker), `bash scripts/dev.sh` starts everything, including a local Solana validator.
+
+### Mock mode (front-end only)
+
+`npm run mock` plus `VITE_API_TARGET=http://localhost:4010 npm run dev` serves a fake API generated from `specs/03-api.yaml`. Use it only to work on screens without the back end. **Nothing is saved**, every account comes back as the same freelancer, and text fields show placeholder values like `string`. The app shows a yellow "Mock mode" banner while it runs this way.

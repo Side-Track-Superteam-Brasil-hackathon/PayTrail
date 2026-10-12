@@ -165,7 +165,8 @@ class InvoiceIntegrationTest extends CoreApiTest {
         assertThat(page.get("recipientAddress").asText()).isEqualTo(ana.wallet());
         assertThat(page.get("amountToSend").asText()).isEqualTo(unique);
         assertThat(page.get("status").asText()).isEqualTo("OPEN");
-        assertThat(page.get("solanaPayUrl").asText()).isEqualTo("solana:" + ana.wallet() + "?amount=" + unique
+        assertThat(page.get("solanaPayUrl").asText()).isEqualTo("solana:" + ana.wallet() + "?amount="
+                + new BigDecimal(unique).stripTrailingZeros().toPlainString()
                 + "&spl-token=" + USDC + "&reference=" + ref + "&label=PayTrail&message=" + publicId);
 
         // Parcial: amountToSend = saldo

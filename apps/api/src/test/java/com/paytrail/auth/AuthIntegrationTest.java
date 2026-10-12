@@ -19,7 +19,7 @@ class AuthIntegrationTest extends IntegrationTest {
 
     private String register(String email, String role) throws Exception {
         var body = """
-                {"email":"%s","password":"password123","name":"Test","role":"%s"}""".formatted(email, role);
+                {"email":"%s","password":"Pass-word-1234","name":"Test","role":"%s"}""".formatted(email, role);
         var res = mvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.user.role").value(role))
@@ -37,7 +37,7 @@ class AuthIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.fxRule").value("CARNE_LEAO"));
 
         mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"ana@test.dev\",\"password\":\"password123\"}"))
+                        .content("{\"email\":\"ana@test.dev\",\"password\":\"Pass-word-1234\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty());
 
@@ -51,9 +51,17 @@ class AuthIntegrationTest extends IntegrationTest {
     void duplicateEmailIsRejected() throws Exception {
         register("dup@test.dev", "ACCOUNTANT");
         mvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"dup@test.dev\",\"password\":\"password123\",\"name\":\"X\",\"role\":\"FREELANCER\"}"))
+                        .content("{\"email\":\"dup@test.dev\",\"password\":\"Pass-word-1234\",\"name\":\"X\",\"role\":\"FREELANCER\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("EMAIL_TAKEN"));
+    }
+
+    @Test
+    void weakPasswordIsRejected() throws Exception {
+        mvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"weak@test.dev\",\"password\":\"password123\",\"name\":\"X\",\"role\":\"FREELANCER\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("WEAK_PASSWORD"));
     }
 
     @Test

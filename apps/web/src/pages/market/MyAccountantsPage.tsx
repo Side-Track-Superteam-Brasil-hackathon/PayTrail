@@ -10,6 +10,8 @@ import { EmptyState } from '../../components/EmptyState';
 import { Loading } from '../../components/Loading';
 import { PageHeader } from '../../components/PageHeader';
 import { Pill } from '../../components/Pill';
+import { useI18n } from '../../i18n/I18nProvider';
+import type { MessageKey } from '../../i18n/messages';
 import { errorMessage } from './errors';
 import { formatDate, formatDateTime } from './time';
 
@@ -18,10 +20,10 @@ interface LogEntry {
   createdAt?: string;
 }
 
-const ACTION_LABEL: Record<string, string> = {
-  VIEW_REPORT: 'Viewed monthly report',
-  EXPORT_CSV: 'Exported CSV',
-  VIEW_INVOICE: 'Viewed an invoice',
+const ACTION_LABEL: Record<string, MessageKey> = {
+  VIEW_REPORT: 'market.accountants.action.VIEW_REPORT',
+  EXPORT_CSV: 'market.accountants.action.EXPORT_CSV',
+  VIEW_INVOICE: 'market.accountants.action.VIEW_INVOICE',
 };
 
 function without<T>(rec: Record<string, T>, key: string): Record<string, T> {
@@ -31,6 +33,7 @@ function without<T>(rec: Record<string, T>, key: string): Record<string, T> {
 }
 
 export function MyAccountantsPage() {
+  const { t } = useI18n();
   const [items, setItems] = useState<AccountantAccess[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<Record<string, LogEntry[] | 'loading'>>({});
@@ -81,19 +84,17 @@ export function MyAccountantsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My accountants" subtitle="Who can see your accounting history, and what they did with it." />
+      <PageHeader title={t('market.accountants.title')} subtitle={t('market.accountants.subtitle')} />
       <div className="flex gap-3 bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-2xl p-4 text-sm">
         <Lock size={18} className="text-indigo-600 shrink-0 mt-0.5" />
-        <p>
-          Access is granted only when you accept a proposal, and only for the period you agreed on. You can revoke it at
-          any time, with immediate effect, and every view or export by your accountant is logged here.
-        </p>
+        <p>{t('market.accountants.notice')}</p>
       </div>
       {error && <Alert>{error}</Alert>}
       {items === null && !error && <Loading />}
       {items?.length === 0 && (
-        <EmptyState icon={<ShieldCheck size={26} />} title="No accountant has access to your records">
-          <Link to="/directory">Find an accountant</Link> and send a proposal from the conversation.
+        <EmptyState icon={<ShieldCheck size={26} />} title={t('market.accountants.emptyTitle')}>
+          <Link to="/directory">{t('market.accountants.emptyLink')}</Link>
+          {t('market.accountants.emptyText')}
         </EmptyState>
       )}
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 items-start">
@@ -108,7 +109,7 @@ export function MyAccountantsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="font-semibold text-lg text-slate-900 truncate">{a.accountant?.name}</h3>
-                    <Pill tone={status === 'ACTIVE' ? 'emerald' : 'red'}>{status === 'ACTIVE' ? 'Active' : 'Revoked'}</Pill>
+                    <Pill tone={status === 'ACTIVE' ? 'emerald' : 'red'}>{status === 'ACTIVE' ? t('market.accountants.statusActive') : t('market.accountants.statusRevoked')}</Pill>
                   </div>
                   {a.accountant?.city && (
                     <p className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
@@ -121,11 +122,14 @@ export function MyAccountantsPage() {
               <div className="bg-slate-50 rounded-xl p-3.5 text-sm space-y-1">
                 <p className="flex items-center gap-2 text-slate-700">
                   <CalendarRange size={16} className="text-slate-400 shrink-0" />
-                  Period: {a.periodStart && formatDate(a.periodStart)} to {a.periodEnd && formatDate(a.periodEnd)}
+                  {t('market.accountants.period', {
+                    start: a.periodStart ? formatDate(a.periodStart) : '',
+                    end: a.periodEnd ? formatDate(a.periodEnd) : '',
+                  })}
                 </p>
                 <p className="text-xs text-slate-500 pl-6">
-                  Granted {a.grantedAt && formatDateTime(a.grantedAt)}
-                  {a.revokedAt && ` · Revoked ${formatDateTime(a.revokedAt)}`}
+                  {t('market.accountants.granted', { date: a.grantedAt ? formatDateTime(a.grantedAt) : '' })}
+                  {a.revokedAt && t('market.accountants.revokedAt', { date: formatDateTime(a.revokedAt) })}
                 </p>
               </div>
 
@@ -136,18 +140,18 @@ export function MyAccountantsPage() {
                   onClick={() => void toggleLog(id)}
                   icon={log ? <EyeOff size={16} /> : <Eye size={16} />}
                 >
-                  {log ? 'Hide access log' : 'View access log'}
+                  {log ? t('market.accountants.hideLog') : t('market.accountants.viewLog')}
                 </Button>
                 {status === 'ACTIVE' && confirming !== id && (
                   <Button variant="danger" size="sm" onClick={() => setConfirming(id)} icon={<ShieldOff size={16} />}>
-                    Revoke
+                    {t('market.accountants.revoke')}
                   </Button>
                 )}
               </div>
 
               {confirming === id && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800">
-                  Revoke {a.accountant?.name}&apos;s access now? They will immediately lose access to your records.
+                  {t('market.accountants.confirmRevoke', { name: a.accountant?.name ?? '' })}
                   <div className="flex flex-wrap gap-2 mt-3">
                     <Button
                       size="sm"
@@ -155,22 +159,22 @@ export function MyAccountantsPage() {
                       disabled={busy === id}
                       onClick={() => void revoke(id)}
                     >
-                      {busy === id ? 'Revoking...' : 'Yes, revoke'}
+                      {busy === id ? t('market.accountants.revoking') : t('market.accountants.confirmYes')}
                     </Button>
-                    <Button variant="secondary" size="sm" onClick={() => setConfirming(null)}>Keep access</Button>
+                    <Button variant="secondary" size="sm" onClick={() => setConfirming(null)}>{t('market.accountants.keepAccess')}</Button>
                   </div>
                 </div>
               )}
 
-              {log === 'loading' && <p className="text-sm text-slate-500">Loading log...</p>}
+              {log === 'loading' && <p className="text-sm text-slate-500">{t('market.accountants.loadingLog')}</p>}
               {Array.isArray(log) &&
                 (log.length === 0 ? (
-                  <p className="text-sm text-slate-500">No access recorded yet.</p>
+                  <p className="text-sm text-slate-500">{t('market.accountants.logEmpty')}</p>
                 ) : (
                   <ul className="divide-y divide-slate-100 border border-slate-200 rounded-xl text-sm">
                     {log.map((l, i) => (
                       <li key={`${l.createdAt}-${i}`} className="flex flex-wrap justify-between gap-x-3 gap-y-0.5 px-3.5 py-2.5">
-                        <span className="text-slate-700">{ACTION_LABEL[l.action ?? ''] ?? l.action}</span>
+                        <span className="text-slate-700">{ACTION_LABEL[l.action ?? ''] ? t(ACTION_LABEL[l.action ?? '']) : l.action}</span>
                         <span className="text-xs text-slate-400">{l.createdAt && formatDateTime(l.createdAt)}</span>
                       </li>
                     ))}

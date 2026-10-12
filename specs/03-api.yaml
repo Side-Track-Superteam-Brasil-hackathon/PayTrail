@@ -26,11 +26,16 @@ paths:
               required: [email, password, name, role]
               properties:
                 email: { type: string, format: email }
-                password: { type: string, minLength: 8 }
-                name: { type: string }
+                password:
+                  type: string
+                  minLength: 12
+                  description: 'Política (specs/00 §Decisões): 12+ caracteres, número, maiúscula, minúscula e símbolo; máx. 72 bytes UTF-8.'
+                  example: 'Ana-Souza-2026!'
+                name: { type: string, example: 'Ana Souza' }
                 role: { $ref: '#/components/schemas/Role' }
       responses:
         '201': { $ref: '#/components/responses/Auth' }
+        '400': { description: 'WEAK_PASSWORD (senha fora da política) ou VALIDATION_ERROR' }
         '409': { description: EMAIL_TAKEN }
   /auth/login:
     post:
