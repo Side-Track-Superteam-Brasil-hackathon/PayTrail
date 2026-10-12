@@ -11,12 +11,14 @@ import { cx } from '../../components/cx';
 import { EmptyState } from '../../components/EmptyState';
 import { Loading } from '../../components/Loading';
 import { PageHeader } from '../../components/PageHeader';
+import { useI18n } from '../../i18n/I18nProvider';
 import { errorMessage } from './errors';
 
 type RoleFilter = Role | 'ALL';
 
 export function DirectoryPage() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [role, setRole] = useState<RoleFilter>(user?.role === 'ACCOUNTANT' ? 'FREELANCER' : 'ACCOUNTANT');
   const [input, setInput] = useState('');
@@ -69,18 +71,18 @@ export function DirectoryPage() {
   return (
     <div>
       <PageHeader
-        title={user?.role === 'ACCOUNTANT' ? 'Find clients' : 'Find an accountant'}
-        subtitle="Find accountants and freelancers by name, city or specialty."
+        title={user?.role === 'ACCOUNTANT' ? t('market.directory.titleClients') : t('market.directory.titleAccountant')}
+        subtitle={t('market.directory.subtitle')}
       />
       <div className="flex flex-col sm:flex-row gap-3 mb-6 sm:mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
           <input
             type="search"
-            placeholder="Search name, city, specialty..."
+            placeholder={t('market.directory.searchPlaceholder')}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            aria-label="Search"
+            aria-label={t('market.directory.searchLabel')}
             className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
           />
         </div>
@@ -89,12 +91,12 @@ export function DirectoryPage() {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as RoleFilter)}
-            aria-label="Role"
+            aria-label={t('market.directory.roleLabel')}
             className="w-full sm:w-auto appearance-none pl-10 pr-10 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 font-medium shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
           >
-            <option value="ACCOUNTANT">Accountants</option>
-            <option value="FREELANCER">Freelancers</option>
-            <option value="ALL">Everyone</option>
+            <option value="ACCOUNTANT">{t('market.directory.filterAccountants')}</option>
+            <option value="FREELANCER">{t('market.directory.filterFreelancers')}</option>
+            <option value="ALL">{t('market.directory.filterAll')}</option>
           </select>
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         </div>
@@ -103,8 +105,8 @@ export function DirectoryPage() {
       {error && <Alert className="mb-6">{error}</Alert>}
       {profiles === null && !error && <Loading />}
       {profiles?.length === 0 && (
-        <EmptyState icon={<Users size={26} />} title="No profiles found">
-          Try a different search or filter.
+        <EmptyState icon={<Users size={26} />} title={t('market.directory.emptyTitle')}>
+          {t('market.directory.emptyText')}
         </EmptyState>
       )}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -125,10 +127,10 @@ export function DirectoryPage() {
                       accountant ? 'text-emerald-700 bg-emerald-50' : 'text-indigo-600 bg-indigo-50',
                     )}
                   >
-                    {accountant ? 'Accountant' : 'Freelancer'}
+                    {accountant ? t('common.accountant') : t('common.freelancer')}
                   </span>
                   <p className="flex items-center gap-1 text-xs text-slate-500 mt-1.5">
-                    <MapPin size={12} /> {p.city ?? 'Brazil'}
+                    <MapPin size={12} /> {p.city ?? t('market.directory.defaultCity')}
                   </p>
                 </div>
               </div>
@@ -146,7 +148,7 @@ export function DirectoryPage() {
                 onClick={() => void message(p)}
                 icon={<MessageSquare size={18} />}
               >
-                {opening === p.id ? 'Opening...' : 'Start conversation'}
+                {opening === p.id ? t('market.directory.opening') : t('market.directory.startConversation')}
               </Button>
             </div>
           );

@@ -31,7 +31,7 @@ class MarketIntegrationTest extends IntegrationTest {
 
     private Session register(String email, String name, String role) throws Exception {
         var body = """
-                {"email":"%s","password":"password123","name":"%s","role":"%s"}""".formatted(email, name, role);
+                {"email":"%s","password":"Pass-word-1234","name":"%s","role":"%s"}""".formatted(email, name, role);
         var res = mvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated()).andReturn();
         var node = json.readTree(res.getResponse().getContentAsString());

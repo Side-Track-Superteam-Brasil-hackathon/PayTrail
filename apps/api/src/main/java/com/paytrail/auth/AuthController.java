@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +24,7 @@ public class AuthController {
 
     public record RegisterRequest(
             @NotBlank @Email String email,
-            @NotBlank @Size(min = 8) String password,
+            @NotBlank String password,
             @NotBlank String name,
             @NotNull Role role) {}
 
@@ -48,6 +47,10 @@ public class AuthController {
     @Transactional
     public AuthResponse register(@Valid @RequestBody RegisterRequest req) {
         var email = req.email().trim().toLowerCase();
+        var weak = PasswordPolicy.violations(req.password());
+        if (!weak.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "WEAK_PASSWORD", "password needs " + String.join(", ", weak));
+        }
         if (users.existsByEmailIgnoreCase(email)) {
             throw new ApiException(HttpStatus.CONFLICT, "EMAIL_TAKEN", "email already registered");
         }

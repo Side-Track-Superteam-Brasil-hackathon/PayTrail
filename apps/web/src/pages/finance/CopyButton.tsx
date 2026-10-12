@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { Button } from '../../components/Button';
+import { useI18n } from '../../i18n/I18nProvider';
 
-export function CopyButton({ text, label = 'Copy', className }: { text: string; label?: string; className?: string }) {
+export function CopyButton({ text, label, className }: { text: string; label?: string; className?: string }) {
+  const { t } = useI18n();
   const [done, setDone] = useState(false);
   const copy = async () => {
     try {
@@ -26,7 +28,7 @@ export function CopyButton({ text, label = 'Copy', className }: { text: string; 
       className={className}
       icon={done ? <Check size={16} /> : <Copy size={16} />}
     >
-      {done ? 'Copied' : label}
+      {done ? t('common.copied') : (label ?? t('common.copy'))}
     </Button>
   );
 }

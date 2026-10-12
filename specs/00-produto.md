@@ -55,8 +55,10 @@ Um único tipo de conta (`User`); o papel é escolhido no cadastro.
 
 ## Decisões fixadas
 
-- **Idioma da UI: inglês** (vídeos do Colosseum precisam ser em inglês). Textos centralizados para trocar para pt-BR depois.
-- **Login: e-mail + senha** para todos. Carteira é só um campo de perfil (endereço de recebimento) — contador não precisa de carteira.
+- **Idioma da UI: inglês e português (pt-BR)**, com seletor de idioma em todas as telas (inclusive públicas). Padrão: o idioma salvo pelo usuário; sem escolha salva, o do navegador (`pt*` → pt-BR, resto → inglês). O vídeo do Colosseum é gravado em inglês. Textos centralizados em `apps/web/src/i18n/`.
+- **Página inicial pública** em `/`: apresenta o produto e leva a cadastro/login. Usuário logado vai direto para a área dele.
+- **Login: e-mail + senha** para todos. Cadastro pede a senha duas vezes (confirmação no front).
+- **Política de senha (cadastro):** no mínimo 12 caracteres, com pelo menos um número, uma letra maiúscula, uma minúscula e um símbolo (qualquer caractere que não seja letra, número ou espaço). No máximo 72 bytes em UTF-8 (limite do BCrypt). A API valida e responde `400 WEAK_PASSWORD`; o front mostra a lista de requisitos enquanto o usuário digita. O login não reaplica a política. Carteira é só um campo de perfil (endereço de recebimento) — contador não precisa de carteira.
 - **Rede: somente Solana.** Devnet no demo.
 - Dados pessoais e comerciais **off-chain**. On-chain: pagamentos, eventos de pagamento, hashes de comprovantes.
 

@@ -9,6 +9,7 @@ import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
 import { cx } from '../../components/cx';
 import { Field, inputBase } from '../../components/Field';
+import { useI18n } from '../../i18n/I18nProvider';
 import { ChatLayout } from './ChatLayout';
 import { errorMessage } from './errors';
 import { ProposalCard } from './ProposalCard';
@@ -29,6 +30,7 @@ function mergeMessages(prev: Message[], incoming: Message[]): Message[] {
 }
 
 function Time({ iso, mine }: { iso?: string; mine: boolean }) {
+  useI18n(); // re-render on language change
   if (!iso) return null;
   return (
     <time dateTime={iso} className={cx('text-xs text-slate-400 mt-1', mine ? 'mr-1' : 'ml-1')}>
@@ -40,6 +42,7 @@ function Time({ iso, mine }: { iso?: string; mine: boolean }) {
 export function ConversationPage() {
   const { conversationId = '' } = useParams();
   const { user } = useAuth();
+  const { t } = useI18n();
   const [other, setOther] = useState<Conversation['other']>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -160,16 +163,16 @@ export function ConversationPage() {
         <Link
           to="/inbox"
           className="md:hidden p-1.5 -ml-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-          aria-label="Back to inbox"
+          aria-label={t('market.conversation.backToInbox')}
         >
           <ArrowLeft size={20} />
         </Link>
         <Avatar name={other?.name} seed={other?.id} />
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-slate-900 truncate">{other?.name ?? 'Conversation'}</h3>
+          <h3 className="font-semibold text-slate-900 truncate">{other?.name ?? t('market.conversation.fallbackTitle')}</h3>
           {other?.role && (
             <p className={cx('text-xs font-medium', otherIsAccountant ? 'text-emerald-600' : 'text-indigo-600')}>
-              {otherIsAccountant ? 'Accountant' : 'Freelancer'}
+              {otherIsAccountant ? t('common.accountant') : t('common.freelancer')}
             </p>
           )}
         </div>
@@ -180,8 +183,8 @@ export function ConversationPage() {
             onClick={() => setShowForm(true)}
             icon={<FileSignature size={16} />}
           >
-            <span className="hidden sm:inline">Send proposal</span>
-            <span className="sm:hidden">Propose</span>
+            <span className="hidden sm:inline">{t('market.conversation.sendProposal')}</span>
+            <span className="sm:hidden">{t('market.conversation.propose')}</span>
           </Button>
         )}
       </div>
@@ -198,7 +201,7 @@ export function ConversationPage() {
       >
         {messages.length === 0 && !error && (
           <div className="flex justify-center">
-            <div className="bg-slate-100 px-4 py-2 rounded-full text-xs font-medium text-slate-500">No messages yet. Say hello.</div>
+            <div className="bg-slate-100 px-4 py-2 rounded-full text-xs font-medium text-slate-500">{t('market.conversation.empty')}</div>
           </div>
         )}
         {messages.map((m) => {
@@ -249,17 +252,17 @@ export function ConversationPage() {
             rows={1}
             value={text}
             maxLength={4000}
-            placeholder="Write a message (Enter to send, Shift+Enter for a new line)"
+            placeholder={t('market.conversation.placeholder')}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKeyDown}
-            aria-label="Message"
+            aria-label={t('market.conversation.messageLabel')}
             className="flex-1 min-w-0 resize-none max-h-32 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400 placeholder:truncate"
           />
           <button
             type="button"
             disabled={sending || !text.trim()}
             onClick={() => void send()}
-            aria-label="Send"
+            aria-label={t('market.conversation.send')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             <Send size={20} />
@@ -277,6 +280,7 @@ interface FormProps {
 }
 
 function ProposalForm({ conversationId, onCancel, onCreated }: FormProps) {
+  const { t } = useI18n();
   const initial = defaultPeriod();
   const [fee, setFee] = useState('');
   const [currency, setCurrency] = useState<'BRL' | 'USDC'>('BRL');
@@ -289,7 +293,7 @@ function ProposalForm({ conversationId, onCancel, onCreated }: FormProps) {
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (end < start) {
-      setError('The period end must be after the start.');
+      setError(t('market.proposalForm.periodInvalid'));
       return;
     }
     setBusy(true);
@@ -319,14 +323,14 @@ function ProposalForm({ conversationId, onCancel, onCreated }: FormProps) {
     >
       <div className="flex items-center justify-between mb-3">
         <h4 className="flex items-center gap-2 font-semibold text-slate-900">
-          <ShieldCheck size={18} className="text-indigo-600" /> New proposal
+          <ShieldCheck size={18} className="text-indigo-600" /> {t('market.proposalForm.title')}
         </h4>
-        <button type="button" onClick={onCancel} aria-label="Close" className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+        <button type="button" onClick={onCancel} aria-label={t('common.close')} className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
           <X size={18} />
         </button>
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
-        <Field label="Fee amount">
+        <Field label={t('market.proposalForm.feeAmount')}>
           <input
             required
             inputMode="decimal"
@@ -337,26 +341,26 @@ function ProposalForm({ conversationId, onCancel, onCreated }: FormProps) {
             className={`${inputBase} w-full px-3 py-2`}
           />
         </Field>
-        <Field label="Currency">
+        <Field label={t('market.proposalForm.currency')}>
           <select value={currency} onChange={(e) => setCurrency(e.target.value as 'BRL' | 'USDC')} className={`${inputBase} w-full px-3 py-2`}>
             <option value="BRL">BRL</option>
             <option value="USDC">USDC</option>
           </select>
         </Field>
-        <Field label="Data access from">
+        <Field label={t('market.proposalForm.accessFrom')}>
           <input type="date" required value={start} onChange={(e) => setStart(e.target.value)} className={`${inputBase} w-full px-3 py-2`} />
         </Field>
-        <Field label="Data access until">
+        <Field label={t('market.proposalForm.accessUntil')}>
           <input type="date" required value={end} onChange={(e) => setEnd(e.target.value)} className={`${inputBase} w-full px-3 py-2`} />
         </Field>
-        <Field label="Note" className="sm:col-span-2">
+        <Field label={t('market.proposalForm.note')} className="sm:col-span-2">
           <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} className={`${inputBase} w-full px-3 py-2`} />
         </Field>
       </div>
       {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
-        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" variant="accent" disabled={busy}>{busy ? 'Sending...' : 'Send proposal'}</Button>
+        <Button variant="ghost" onClick={onCancel}>{t('common.cancel')}</Button>
+        <Button type="submit" variant="accent" disabled={busy}>{busy ? t('market.proposalForm.sending') : t('market.proposalForm.submit')}</Button>
       </div>
     </form>
   );

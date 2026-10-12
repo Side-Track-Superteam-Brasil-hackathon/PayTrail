@@ -10,7 +10,11 @@ import { Avatar } from './components/Avatar';
 import { ButtonLink } from './components/Button';
 import { cx } from './components/cx';
 import { EmptyState } from './components/EmptyState';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { Loading } from './components/Loading';
+import { useI18n } from './i18n/I18nProvider';
+import type { MessageKey } from './i18n/messages';
+import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { InvoiceDetailPage } from './pages/finance/InvoiceDetailPage';
@@ -29,29 +33,30 @@ import { MyAccountantsPage } from './pages/market/MyAccountantsPage';
 
 interface NavItem {
   to: string;
-  label: string;
+  label: MessageKey;
   icon: LucideIcon;
 }
 
 const NAV: Record<Role, NavItem[]> = {
   FREELANCER: [
-    { to: '/invoices', label: 'Invoices', icon: FileText },
-    { to: '/payments/unmatched', label: 'Unmatched', icon: AlertTriangle },
-    { to: '/reports', label: 'Monthly report', icon: BarChart3 },
-    { to: '/directory', label: 'Find an accountant', icon: Search },
-    { to: '/inbox', label: 'Messages', icon: MessageSquare },
-    { to: '/accountants', label: 'My accountants', icon: ShieldCheck },
+    { to: '/invoices', label: 'nav.invoices', icon: FileText },
+    { to: '/payments/unmatched', label: 'nav.unmatched', icon: AlertTriangle },
+    { to: '/reports', label: 'nav.monthlyReport', icon: BarChart3 },
+    { to: '/directory', label: 'nav.findAccountant', icon: Search },
+    { to: '/inbox', label: 'nav.messages', icon: MessageSquare },
+    { to: '/accountants', label: 'nav.myAccountants', icon: ShieldCheck },
   ],
   ACCOUNTANT: [
-    { to: '/clients', label: 'My clients', icon: Briefcase },
-    { to: '/directory', label: 'Find clients', icon: Search },
-    { to: '/inbox', label: 'Messages', icon: MessageSquare },
+    { to: '/clients', label: 'nav.myClients', icon: Briefcase },
+    { to: '/directory', label: 'nav.findClients', icon: Search },
+    { to: '/inbox', label: 'nav.messages', icon: MessageSquare },
   ],
 };
 
 /** Public pages and auth screens render full-page, without the app sidebar. */
 function isBare(pathname: string): boolean {
   return (
+    pathname === '/' ||
     pathname === '/login' ||
     pathname === '/register' ||
     pathname.startsWith('/pay/') ||
@@ -71,15 +76,20 @@ function Protected({ role, children }: { role?: Role; children: ReactNode }) {
 function Home() {
   const { user, loading } = useAuth();
   if (loading) return <Loading />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LandingPage />;
   return <Navigate to={user.role === 'FREELANCER' ? '/invoices' : '/clients'} replace />;
 }
 
 function NotFound() {
+  const { t } = useI18n();
   return (
     <div className="max-w-xl mx-auto py-12 px-4">
-      <EmptyState icon={<Compass size={26} />} title="Page not found" action={<ButtonLink to="/">Go home</ButtonLink>}>
-        The page you are looking for does not exist or was moved.
+      <EmptyState
+        icon={<Compass size={26} />}
+        title={t('notFound.title')}
+        action={<ButtonLink to="/">{t('notFound.home')}</ButtonLink>}
+      >
+        {t('notFound.text')}
       </EmptyState>
     </div>
   );
@@ -87,6 +97,7 @@ function NotFound() {
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   if (!user) return null;
   const accountant = user.role === 'ACCOUNTANT';
   const active = accountant ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700';
@@ -102,12 +113,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               accountant ? 'text-emerald-600' : 'text-slate-500',
             )}
           >
-            {accountant ? 'Accountant mode' : 'Freelancer mode'}
+            {accountant ? t('nav.accountantMode') : t('nav.freelancerMode')}
           </span>
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1" aria-label="Main">
+      <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1" aria-label={t('nav.main')}>
         {NAV[user.role].map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -121,7 +132,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             }
           >
             <Icon size={20} className="shrink-0" />
-            <span className="truncate">{label}</span>
+            <span className="truncate">{t(label)}</span>
           </NavLink>
         ))}
       </nav>
@@ -145,7 +156,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               )
             }
           >
-            <Settings size={16} /> Profile
+            <Settings size={16} /> {t('nav.profile')}
           </NavLink>
           <button
             type="button"
@@ -155,16 +166,29 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             }}
             className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
-            <LogOut size={16} /> Log out
+            <LogOut size={16} /> {t('nav.logout')}
           </button>
         </div>
+        <LanguageSwitcher className="mt-3 w-full justify-center" />
       </div>
+    </div>
+  );
+}
+
+/** Faixa fixa quando o front aponta para o mock do Prism (VITE_API_TARGET na porta 401x): nada é salvo. */
+function MockBanner() {
+  const { t } = useI18n();
+  if (!__API_MOCK__) return null;
+  return (
+    <div role="status" className="bg-amber-400 text-amber-950 text-xs sm:text-sm font-medium text-center px-4 py-2">
+      {t('mock.banner')}
     </div>
   );
 }
 
 function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   useEffect(() => setOpen(false), [pathname]);
@@ -179,48 +203,51 @@ function AppShell({ children }: { children: ReactNode }) {
   }, [open]);
 
   return (
-    <div className="flex h-[100dvh] bg-slate-50">
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-64 shrink-0 bg-white border-r border-slate-200 flex-col">
-        <SidebarContent />
-      </aside>
+    <div className="flex flex-col h-[100dvh] bg-slate-50">
+      <MockBanner />
+      <div className="flex flex-1 min-h-0">
+        {/* Desktop sidebar */}
+        <aside className="hidden md:flex w-64 shrink-0 bg-white border-r border-slate-200 flex-col">
+          <SidebarContent />
+        </aside>
 
-      {/* Mobile drawer */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label="Navigation">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl">
+        {/* Mobile drawer */}
+        {open && (
+          <div className="md:hidden fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label={t('nav.navigation')}>
+            <div className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} />
+            <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="absolute top-5 right-4 p-2 text-slate-500 hover:text-slate-900 rounded-lg"
+                aria-label={t('nav.closeMenu')}
+              >
+                <X size={22} />
+              </button>
+              <SidebarContent onNavigate={() => setOpen(false)} />
+            </aside>
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Mobile header */}
+          <header className="md:hidden h-16 shrink-0 flex items-center justify-between px-4 bg-white border-b border-slate-200">
+            <Link to="/" className="text-xl font-bold text-indigo-600">PayTrail</Link>
             <button
               type="button"
-              onClick={() => setOpen(false)}
-              className="absolute top-5 right-4 p-2 text-slate-500 hover:text-slate-900 rounded-lg"
-              aria-label="Close menu"
+              onClick={() => setOpen(true)}
+              className="p-2 -mr-2 text-slate-600 hover:text-slate-900 rounded-lg"
+              aria-label={t('nav.openMenu')}
+              aria-expanded={open}
             >
-              <X size={22} />
+              <Menu size={24} />
             </button>
-            <SidebarContent onNavigate={() => setOpen(false)} />
-          </aside>
+          </header>
+
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-6xl mx-auto px-4 py-6 md:p-8">{children}</div>
+          </main>
         </div>
-      )}
-
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Mobile header */}
-        <header className="md:hidden h-16 shrink-0 flex items-center justify-between px-4 bg-white border-b border-slate-200">
-          <Link to="/" className="text-xl font-bold text-indigo-600">PayTrail</Link>
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="p-2 -mr-2 text-slate-600 hover:text-slate-900 rounded-lg"
-            aria-label="Open menu"
-            aria-expanded={open}
-          >
-            <Menu size={24} />
-          </button>
-        </header>
-
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-4 py-6 md:p-8">{children}</div>
-        </main>
       </div>
     </div>
   );
@@ -266,7 +293,12 @@ export function App() {
   );
 
   if (!user || isBare(pathname)) {
-    return <div className="min-h-[100dvh] bg-slate-50">{routes}</div>;
+    return (
+      <div className="min-h-[100dvh] bg-slate-50">
+        <MockBanner />
+        {routes}
+      </div>
+    );
   }
   return <AppShell>{routes}</AppShell>;
 }

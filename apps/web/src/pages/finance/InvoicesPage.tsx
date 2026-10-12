@@ -12,17 +12,11 @@ import { Loading } from '../../components/Loading';
 import { PageHeader } from '../../components/PageHeader';
 import { StatCard } from '../../components/StatCard';
 import { TBody, THead, Table, Td, Th } from '../../components/Table';
+import { useI18n } from '../../i18n/I18nProvider';
 import { formatDate, formatExact, formatUsdc, errorMessage } from './format';
 import { StatusBadge } from './StatusBadge';
 
-const FILTERS: { value: InvoiceStatus | ''; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'OPEN', label: 'Open' },
-  { value: 'PARTIALLY_PAID', label: 'Partially paid' },
-  { value: 'PAID', label: 'Paid' },
-  { value: 'OVERPAID', label: 'Overpaid' },
-  { value: 'CANCELLED', label: 'Cancelled' },
-];
+const FILTERS: (InvoiceStatus | '')[] = ['', 'OPEN', 'PARTIALLY_PAID', 'PAID', 'OVERPAID', 'CANCELLED'];
 
 const RECEIVED: InvoiceStatus[] = ['PAID', 'OVERPAID', 'PARTIALLY_PAID'];
 const OPEN: InvoiceStatus[] = ['OPEN', 'PARTIALLY_PAID'];
@@ -43,6 +37,7 @@ function sumUsdc(values: (string | undefined)[]): string {
 }
 
 export function InvoicesPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<InvoiceStatus | ''>('');
@@ -83,60 +78,60 @@ export function InvoicesPage() {
   return (
     <div>
       <PageHeader
-        title="Invoices"
-        subtitle="Issue invoices and track on-chain reconciliation."
-        actions={<ButtonLink to="/invoices/new" variant="accent" icon={<Plus size={20} />}>New invoice</ButtonLink>}
+        title={t('finance.invoices.title')}
+        subtitle={t('finance.invoices.subtitle')}
+        actions={<ButtonLink to="/invoices/new" variant="accent" icon={<Plus size={20} />}>{t('finance.invoices.new')}</ButtonLink>}
       />
 
       {user && !user.solanaWallet && (
         <Alert tone="warning" className="mb-6">
-          You have not set a Solana wallet yet. Add one in your <Link to="/profile">profile</Link> to create invoices.
+          {t('finance.invoices.walletMissingBefore')}<Link to="/profile">{t('finance.invoices.walletMissingLink')}</Link>{t('finance.invoices.walletMissingAfter')}
         </Alert>
       )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
         <StatCard
-          label="Total received"
+          label={t('finance.invoices.totalReceived')}
           value={received == null ? '—' : formatUsdc(received)}
           suffix="USDC"
           icon={<CheckCircle size={24} />}
           tone="emerald"
         />
         <StatCard
-          label="Open invoices"
+          label={t('finance.invoices.openInvoices')}
           value={openCount == null ? '—' : openCount}
           icon={<FileText size={24} />}
           tone="amber"
         />
         <StatCard
-          label="Shared access"
-          value={<span className="text-lg">Accountants</span>}
+          label={t('finance.invoices.sharedAccess')}
+          value={<span className="text-lg">{t('finance.invoices.accountants')}</span>}
           icon={<ShieldCheck size={24} />}
           tone="indigo"
           footer={
             <Link to="/accountants" className="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-800">
-              Manage my accountants <ArrowRight size={16} />
+              {t('finance.invoices.manageAccountants')} <ArrowRight size={16} />
             </Link>
           }
         />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap" role="tablist" aria-label="Filter by status">
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap" role="tablist" aria-label={t('finance.invoices.filterByStatus')}>
         {FILTERS.map((f) => (
           <button
-            key={f.value}
+            key={f}
             type="button"
             role="tab"
-            aria-selected={filter === f.value}
-            onClick={() => setFilter(f.value)}
+            aria-selected={filter === f}
+            onClick={() => setFilter(f)}
             className={cx(
               'px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap',
-              filter === f.value
+              filter === f
                 ? 'bg-slate-900 text-white border-slate-900'
                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50',
             )}
           >
-            {f.label}
+            {f ? t(`finance.status.${f}`) : t('finance.invoices.filterAll')}
           </button>
         ))}
       </div>
@@ -147,23 +142,23 @@ export function InvoicesPage() {
       {invoices && invoices.length === 0 && (
         <EmptyState
           icon={<FileText size={26} />}
-          title={filter ? 'No invoices with this status' : 'No invoices yet'}
-          action={<ButtonLink to="/invoices/new" variant="accent" icon={<Plus size={18} />}>New invoice</ButtonLink>}
+          title={filter ? t('finance.invoices.emptyFiltered') : t('finance.invoices.empty')}
+          action={<ButtonLink to="/invoices/new" variant="accent" icon={<Plus size={18} />}>{t('finance.invoices.new')}</ButtonLink>}
         >
-          Create your first invoice and share the payment link with your client.
+          {t('finance.invoices.emptyText')}
         </EmptyState>
       )}
 
       {invoices && invoices.length > 0 && (
         <Table>
           <THead>
-            <Th>Client</Th>
-            <Th num>Amount (USDC)</Th>
-            <Th num>Paid</Th>
-            <Th num>Balance</Th>
-            <Th>Status</Th>
-            <Th>Due</Th>
-            <Th className="text-right">Details</Th>
+            <Th>{t('finance.invoices.colClient')}</Th>
+            <Th num>{t('finance.invoices.colAmount')}</Th>
+            <Th num>{t('finance.invoices.colPaid')}</Th>
+            <Th num>{t('finance.invoices.colBalance')}</Th>
+            <Th>{t('finance.invoices.colStatus')}</Th>
+            <Th>{t('finance.invoices.colDue')}</Th>
+            <Th className="text-right">{t('finance.invoices.colDetails')}</Th>
           </THead>
           <TBody>
             {invoices.map((i) => (
@@ -184,7 +179,7 @@ export function InvoicesPage() {
                 </Td>
                 <Td num>
                   <div className="font-medium text-slate-900">{formatExact(i.uniqueAmount)}</div>
-                  <div className="text-xs text-slate-400">base {formatUsdc(i.baseAmount)}</div>
+                  <div className="text-xs text-slate-400">{t('finance.invoices.base', { amount: formatUsdc(i.baseAmount) })}</div>
                 </Td>
                 <Td num>{formatUsdc(i.amountPaid)}</Td>
                 <Td num>{formatUsdc(i.balance)}</Td>
@@ -192,7 +187,7 @@ export function InvoicesPage() {
                 <Td className="whitespace-nowrap text-slate-500">{formatDate(i.dueDate)}</Td>
                 <Td className="text-right">
                   <span className="inline-flex items-center gap-1 text-indigo-600 font-medium whitespace-nowrap">
-                    View <ChevronRight size={16} />
+                    {t('finance.invoices.view')} <ChevronRight size={16} />
                   </span>
                 </Td>
               </tr>

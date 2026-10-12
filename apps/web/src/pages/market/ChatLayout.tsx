@@ -6,18 +6,20 @@ import type { Conversation } from '../../api/types';
 import { Avatar } from '../../components/Avatar';
 import { cx } from '../../components/cx';
 import { Loading } from '../../components/Loading';
+import { translate, useI18n } from '../../i18n/I18nProvider';
 import { errorMessage } from './errors';
 import { relativeTime } from './time';
 import { usePolling } from './usePolling';
 
-function preview(c: Conversation): string {
+function preview(c: Conversation, t: typeof translate): string {
   const m = c.lastMessage;
-  if (!m) return 'No messages yet';
-  if (m.type === 'PROPOSAL') return 'Proposal sent';
+  if (!m) return t('market.chat.noMessagesPreview');
+  if (m.type === 'PROPOSAL') return t('market.chat.proposalSentPreview');
   return m.body ?? '';
 }
 
 function ConversationList({ activeId }: { activeId?: string }) {
+  const { t } = useI18n();
   const [items, setItems] = useState<Conversation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,9 +39,10 @@ function ConversationList({ activeId }: { activeId?: string }) {
       {items === null && !error && <div className="px-4"><Loading /></div>}
       {items?.length === 0 && (
         <div className="p-6 text-center text-sm text-slate-500">
-          <p>No conversations yet.</p>
+          <p>{t('market.chat.empty')}</p>
           <p className="mt-1">
-            <Link to="/directory" className="font-medium text-indigo-600 hover:text-indigo-800">Browse the directory</Link> to start one.
+            <Link to="/directory" className="font-medium text-indigo-600 hover:text-indigo-800">{t('market.chat.browseDirectory')}</Link>
+            {t('market.chat.toStartOne')}
           </p>
         </div>
       )}
@@ -62,7 +65,7 @@ function ConversationList({ activeId }: { activeId?: string }) {
                 <span className="text-[11px] text-slate-400 whitespace-nowrap shrink-0">{relativeTime(c.lastMessageAt)}</span>
               </div>
               <p className="text-xs text-slate-500 truncate">
-                <span className="capitalize">{c.other?.role?.toLowerCase()}</span> · {preview(c)}
+                <span>{c.other?.role && t(c.other.role === 'ACCOUNTANT' ? 'common.accountant' : 'common.freelancer')}</span> · {preview(c, t)}
               </p>
             </div>
           </Link>
@@ -77,6 +80,7 @@ function ConversationList({ activeId }: { activeId?: string }) {
  * On mobile only one pane is shown: the list without `activeId`, the thread with it.
  */
 export function ChatLayout({ activeId, children }: { activeId?: string; children: ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="h-[calc(100dvh-7rem)] md:h-[calc(100dvh-4rem)] min-h-[420px] flex rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-200">
       <div
@@ -87,7 +91,7 @@ export function ChatLayout({ activeId, children }: { activeId?: string; children
       >
         <div className="p-4 border-b border-slate-200 bg-white flex items-center gap-2">
           <MessageSquare size={20} className="text-indigo-600" />
-          <h2 className="font-semibold text-lg text-slate-900">Messages</h2>
+          <h2 className="font-semibold text-lg text-slate-900">{t('market.chat.title')}</h2>
         </div>
         <ConversationList activeId={activeId} />
       </div>

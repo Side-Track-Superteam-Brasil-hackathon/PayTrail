@@ -34,7 +34,7 @@ specs           especificações
 
 ## Convenções
 
-- Código e identificadores em inglês; specs em português; UI em inglês.
+- Código e identificadores em inglês; specs em português; UI em inglês e português (nunca texto fixo no JSX: use `t()`).
 - Valores USDC: `BigDecimal` (escala 6) no Java, `string` na API, nunca `double`/`number`.
 - Datas em UTC no banco; datas de câmbio em `America/Sao_Paulo`.
 - Motor de conciliação e cálculo de status como **funções puras** testáveis, separadas de I/O.
@@ -105,6 +105,6 @@ MVP das fatias 1–6 completo. `mvn test` (71 testes) e `scripts/e2e.sh` (S1, S2
 - **API:** todas as rotas de `specs/03-api.yaml`: auth, `/me`, faturas, página pública de pagamento, conciliação (`/internal/*`), pagamentos e match manual, câmbio BRL (PTAX do BCB com cache e retry; `paytrail.bcb.enabled=false` usa cotação fixa offline), comprovantes + `/verify`, relatórios mensais + CSV, diretório, inbox, propostas, acessos e logs. Motor de conciliação **puro** em `reconciliation/`.
 - **Watcher:** adapter Solana completo (reference + ATA, delta de saldo). Depende de `GET /internal/watch-targets` e `POST /internal/transfers` na API. O cursor por endereço só avança depois que a API aceita o POST (falha da API não perde transfers). Validado no localnet por `scripts/e2e.sh --watcher-smoke`.
 - **E2E:** `tools/e2e` (runner A1–A9 contra a spec 03 + watcher smoke), `scripts/e2e.sh`, `scripts/dev.sh`, `tools/demo` (pay/fund/keygen).
-- **Web:** todas as telas (financeiro + marketplace) em Tailwind + lucide-react, seguindo `design/reference-gemini.jsx`. UI em inglês.
+- **Web:** todas as telas (financeiro + marketplace) em Tailwind + lucide-react, seguindo `design/reference-gemini.jsx`. UI em inglês e português: textos em `src/i18n/messages/*.ts` (todo texto visível passa por `t()` de `useI18n()`; `pt` tem as mesmas chaves de `en`, checado pelo TypeScript). Página inicial pública em `/` (`LandingPage`). Política de senha do cadastro em `src/auth/passwordPolicy.ts` (espelha `PasswordPolicy.java`). Com o mock do Prism, o app mostra uma faixa amarela de "modo mock".
 - **Fora do MVP (opcional na spec):** honorários do contador em USDC (fatia 7) e ancoragem on-chain do hash do comprovante.
 - `reference` da fatura (Solana Pay): 32 bytes aleatórios em base58. Não precisa ser uma chave no curve.

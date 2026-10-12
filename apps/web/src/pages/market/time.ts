@@ -1,11 +1,12 @@
-const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+import { currentLocale, translate } from '../../i18n/I18nProvider';
 
 export function relativeTime(iso: string | undefined, now: number = Date.now()): string {
   if (!iso) return '';
   // Relógio do servidor pode estar um pouco adiantado: nunca mostrar tempo no futuro.
   const diff = Math.min(0, (new Date(iso).getTime() - now) / 1000);
   const abs = Math.abs(diff);
-  if (abs < 45) return 'just now';
+  if (abs < 45) return translate('market.time.justNow');
+  const rtf = new Intl.RelativeTimeFormat(currentLocale(), { numeric: 'auto' });
   if (abs < 3600) return rtf.format(Math.round(diff / 60), 'minute');
   if (abs < 86400) return rtf.format(Math.round(diff / 3600), 'hour');
   if (abs < 86400 * 30) return rtf.format(Math.round(diff / 86400), 'day');
@@ -14,11 +15,11 @@ export function relativeTime(iso: string | undefined, now: number = Date.now()):
 
 export function formatDate(isoOrDate: string): string {
   const d = /^\d{4}-\d{2}-\d{2}$/.test(isoOrDate) ? new Date(`${isoOrDate}T00:00:00`) : new Date(isoOrDate);
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString(currentLocale(), { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  return new Date(iso).toLocaleString(currentLocale(), { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 function pad(n: number): string {
@@ -53,7 +54,7 @@ export function formatFee(amount: string, currency: 'BRL' | 'USDC'): string {
 export function formatMessageTime(iso: string, now: Date = new Date()): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const time = d.toLocaleTimeString(currentLocale(), { hour: 'numeric', minute: '2-digit' });
   if (d.toDateString() === now.toDateString()) return time;
-  return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${time}`;
+  return `${d.toLocaleDateString(currentLocale(), { month: 'short', day: 'numeric' })}, ${time}`;
 }

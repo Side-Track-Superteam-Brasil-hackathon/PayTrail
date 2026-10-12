@@ -13,9 +13,10 @@ import { Loading } from '../../components/Loading';
 import { PageHeader } from '../../components/PageHeader';
 import { StatCard } from '../../components/StatCard';
 import { TBody, THead, Table, Td, Th } from '../../components/Table';
+import { useI18n } from '../../i18n/I18nProvider';
 import { CopyButton } from './CopyButton';
 import {
-  errorMessage, formatBrl, formatDate, formatDateTime, formatExact, formatRate, formatUsdc, humanize, shortAddr,
+  codeLabel, errorMessage, formatBrl, formatDate, formatDateTime, formatExact, formatRate, formatUsdc, shortAddr,
 } from './format';
 import { MethodBadge, StatusBadge } from './StatusBadge';
 import { usePolling } from './usePolling';
@@ -26,6 +27,7 @@ function payLink(inv: InvoiceDetail): string {
 }
 
 export function InvoiceDetailPage() {
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const [inv, setInv] = useState<InvoiceDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function InvoiceDetailPage() {
   usePolling(() => void load(), 5000, inv?.status === 'OPEN' || inv?.status === 'PARTIALLY_PAID');
 
   const cancel = async () => {
-    if (!inv || !window.confirm('Cancel this invoice?')) return;
+    if (!inv || !window.confirm(t('finance.detail.cancelConfirm'))) return;
     setBusy(true);
     setActionError(null);
     try {
@@ -55,7 +57,7 @@ export function InvoiceDetailPage() {
       await load();
     } catch (e) {
       setActionError(e instanceof ApiError && e.code === 'INVOICE_HAS_PAYMENTS'
-        ? 'This invoice already has payments and cannot be cancelled.' : errorMessage(e));
+        ? t('finance.detail.hasPayments') : errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -78,7 +80,7 @@ export function InvoiceDetailPage() {
   if (error && !inv) {
     return (
       <Alert>
-        {error} <Link to="/invoices">Back to invoices</Link>
+        {error} <Link to="/invoices">{t('finance.detail.backToInvoices')}</Link>
       </Alert>
     );
   }
@@ -96,23 +98,23 @@ export function InvoiceDetailPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        back={{ to: '/invoices', label: 'Invoices' }}
+        back={{ to: '/invoices', label: t('finance.invoices.title') }}
         title={inv.description}
         meta={
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-500">
             <StatusBadge status={status} overdue={inv.overdue} />
             <span className="break-all">
-              {inv.clientName}{inv.clientEmail ? ` · ${inv.clientEmail}` : ''} · due {formatDate(inv.dueDate)}
+              {inv.clientName}{inv.clientEmail ? ` · ${inv.clientEmail}` : ''} · {t('finance.detail.due', { date: formatDate(inv.dueDate) })}
             </span>
           </div>
         }
         actions={
           <>
             {canReceipt && (
-              <Button onClick={genReceipt} disabled={busy} icon={<FileCheck2 size={18} />}>Generate receipt</Button>
+              <Button onClick={genReceipt} disabled={busy} icon={<FileCheck2 size={18} />}>{t('finance.detail.generateReceipt')}</Button>
             )}
             {canCancel && (
-              <Button variant="danger" onClick={cancel} disabled={busy} icon={<Ban size={18} />}>Cancel invoice</Button>
+              <Button variant="danger" onClick={cancel} disabled={busy} icon={<Ban size={18} />}>{t('finance.detail.cancelInvoice')}</Button>
             )}
           </>
         }
@@ -121,40 +123,40 @@ export function InvoiceDetailPage() {
       {actionError && <Alert>{actionError}</Alert>}
 
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Exact amount to send" value={formatExact(inv.uniqueAmount)} suffix="USDC" icon={<Target size={22} />} tone="indigo" highlight />
-        <StatCard label="Base amount" value={formatUsdc(inv.baseAmount)} suffix="USDC" icon={<Coins size={22} />} tone="slate" />
-        <StatCard label="Paid" value={formatUsdc(inv.amountPaid)} suffix="USDC" icon={<CheckCircle size={22} />} tone="emerald" />
-        <StatCard label="Balance" value={formatUsdc(inv.balance)} suffix="USDC" icon={<Scale size={22} />} tone="amber" />
-        {hasExcess && <StatCard label="Excess" value={formatUsdc(inv.excess)} suffix="USDC" icon={<Wallet size={22} />} tone="blue" />}
+        <StatCard label={t('finance.detail.exactAmount')} value={formatExact(inv.uniqueAmount)} suffix="USDC" icon={<Target size={22} />} tone="indigo" highlight />
+        <StatCard label={t('finance.detail.baseAmount')} value={formatUsdc(inv.baseAmount)} suffix="USDC" icon={<Coins size={22} />} tone="slate" />
+        <StatCard label={t('finance.detail.paid')} value={formatUsdc(inv.amountPaid)} suffix="USDC" icon={<CheckCircle size={22} />} tone="emerald" />
+        <StatCard label={t('finance.detail.balance')} value={formatUsdc(inv.balance)} suffix="USDC" icon={<Scale size={22} />} tone="amber" />
+        {hasExcess && <StatCard label={t('finance.detail.excess')} value={formatUsdc(inv.excess)} suffix="USDC" icon={<Wallet size={22} />} tone="blue" />}
       </div>
 
       {receipt && (
         <Card className="border-emerald-200 bg-emerald-50/40">
-          <CardTitle icon={<FileCheck2 size={18} className="text-emerald-600" />}>Receipt generated</CardTitle>
+          <CardTitle icon={<FileCheck2 size={18} className="text-emerald-600" />}>{t('finance.detail.receiptGenerated')}</CardTitle>
           <div className="text-xs font-medium uppercase tracking-wider text-slate-500">SHA-256</div>
           <div className="font-mono text-sm text-slate-800 break-all mt-1">{receipt.sha256}</div>
           <div className="flex flex-wrap gap-2 mt-4">
-            <ButtonLink to={`/verify/${receipt.sha256}`} size="sm">Open verify page</ButtonLink>
-            <CopyButton text={verifyLink} label="Copy verify link" />
-            <CopyButton text={receipt.sha256 ?? ''} label="Copy hash" />
+            <ButtonLink to={`/verify/${receipt.sha256}`} size="sm">{t('finance.detail.openVerify')}</ButtonLink>
+            <CopyButton text={verifyLink} label={t('finance.detail.copyVerifyLink')} />
+            <CopyButton text={receipt.sha256 ?? ''} label={t('finance.detail.copyHash')} />
           </div>
         </Card>
       )}
 
       <Card>
-        <CardTitle icon={<Link2 size={18} />}>Payment link</CardTitle>
+        <CardTitle icon={<Link2 size={18} />}>{t('finance.detail.paymentLink')}</CardTitle>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             className={`${inputClass} bg-slate-50 font-mono text-sm`}
             readOnly
             value={link}
             onFocus={(e) => e.currentTarget.select()}
-            aria-label="Payment link"
+            aria-label={t('finance.detail.paymentLink')}
           />
           <div className="flex gap-2 shrink-0">
             <CopyButton text={link} />
             <a className={buttonClass('secondary', 'sm')} href={link} target="_blank" rel="noreferrer">
-              <ExternalLink size={16} /> Open
+              <ExternalLink size={16} /> {t('finance.detail.open')}
             </a>
           </div>
         </div>
@@ -162,17 +164,18 @@ export function InvoiceDetailPage() {
 
       <div>
         <h3 className="flex items-center gap-2 font-semibold text-slate-900 mb-3">
-          <Wallet size={18} className="text-slate-400" /> Payments
+          <Wallet size={18} className="text-slate-400" /> {t('finance.detail.payments')}
         </h3>
         {payments.length === 0 ? (
           <Card className="flex items-center gap-3 text-sm text-slate-500">
             <Clock size={18} className="text-amber-500 shrink-0" />
-            No payments yet. This page refreshes automatically.
+            {t('finance.detail.noPayments')}
           </Card>
         ) : (
           <Table>
             <THead>
-              <Th num>USDC</Th><Th>Method</Th><Th num>BRL</Th><Th>FX</Th><Th>From</Th><Th>Tx</Th><Th>Time</Th>
+              <Th num>USDC</Th><Th>{t('finance.detail.colMethod')}</Th><Th num>BRL</Th><Th>{t('finance.detail.colFx')}</Th>
+              <Th>{t('finance.detail.colFrom')}</Th><Th>{t('finance.detail.colTx')}</Th><Th>{t('finance.detail.colTime')}</Th>
             </THead>
             <TBody>
               {payments.map((p) => (
@@ -183,7 +186,7 @@ export function InvoiceDetailPage() {
                   <Td className="whitespace-nowrap">
                     {p.fxRule ? (
                       <>
-                        <div className="text-slate-900">{p.fxRule === 'CARNE_LEAO' ? 'Carnê-leão' : 'PTAX of the day'}</div>
+                        <div className="text-slate-900">{p.fxRule === 'CARNE_LEAO' ? t('finance.detail.fxCarneLeao') : t('finance.detail.fxPtaxDay')}</div>
                         <div className="text-xs text-slate-500">{formatDate(p.fxDate)} · {formatRate(p.fxRate)}</div>
                       </>
                     ) : '—'}
@@ -205,15 +208,15 @@ export function InvoiceDetailPage() {
       </div>
 
       <Card>
-        <CardTitle icon={<History size={18} />}>Trail</CardTitle>
+        <CardTitle icon={<History size={18} />}>{t('finance.detail.trail')}</CardTitle>
         {events.length === 0 ? (
-          <p className="text-sm text-slate-500">No events yet.</p>
+          <p className="text-sm text-slate-500">{t('finance.detail.noEvents')}</p>
         ) : (
           <ol className="relative border-l-2 border-slate-200 ml-1.5 space-y-5">
             {events.map((ev, idx) => (
               <li key={`${ev.createdAt}-${idx}`} className="pl-5 relative">
                 <span className="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-50" />
-                <div className="font-medium text-slate-900">{humanize(ev.type ?? '')}</div>
+                <div className="font-medium text-slate-900">{codeLabel('finance.event', ev.type ?? '')}</div>
                 <div className="text-xs text-slate-500">{formatDateTime(ev.createdAt)}</div>
                 {ev.payload && Object.keys(ev.payload).length > 0 && (
                   <div className="text-xs text-slate-500 mt-1 break-all">

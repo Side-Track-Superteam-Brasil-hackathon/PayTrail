@@ -43,7 +43,7 @@ public abstract class CoreApiTest extends IntegrationTest {
 
     protected Account register(String email, String role) throws Exception {
         var body = """
-                {"email":"%s","password":"password123","name":"Name %s","role":"%s"}""".formatted(email, email, role);
+                {"email":"%s","password":"Pass-word-1234","name":"Name %s","role":"%s"}""".formatted(email, email, role);
         var res = mvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())
                 .andReturn();

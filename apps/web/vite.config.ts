@@ -7,6 +7,8 @@ const useMock = /:401\d\b/.test(target); // Prism mock on ports 4010–4019
 
 export default defineConfig({
   plugins: [react()],
+  // Mostra a faixa "modo mock" no app: com o mock nada é salvo e os textos vêm como "string".
+  define: { __API_MOCK__: JSON.stringify(useMock) },
   server: {
     port: 5173,
     // No WSL com o código em /mnt/c (Windows), eventos de arquivo não chegam: usa polling.

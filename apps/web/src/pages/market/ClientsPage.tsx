@@ -9,6 +9,7 @@ import { ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { Loading } from '../../components/Loading';
 import { PageHeader } from '../../components/PageHeader';
+import { useI18n } from '../../i18n/I18nProvider';
 import { formatUsdc } from '../finance/format';
 import { errorMessage } from './errors';
 import { currentMonth, formatBrl, formatDate } from './time';
@@ -22,6 +23,7 @@ interface ClientRow {
 }
 
 export function ClientsPage() {
+  const { t } = useI18n();
   const [items, setItems] = useState<ClientRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const month = currentMonth();
@@ -35,15 +37,18 @@ export function ClientsPage() {
   return (
     <div>
       <PageHeader
-        title="My clients"
-        subtitle={<>Freelancers who granted you read-only access. Current month: {month}.</>}
+        title={t('market.clients.title')}
+        subtitle={t('market.clients.subtitle', { month })}
       />
       {error && <Alert className="mb-6">{error}</Alert>}
       {items === null && !error && <Loading />}
       {items?.length === 0 && (
-        <EmptyState icon={<Briefcase size={26} />} title="No clients yet">
-          Access appears here once a freelancer accepts your proposal.{' '}
-          <Link to="/directory">Browse the directory</Link> or check your <Link to="/inbox">inbox</Link>.
+        <EmptyState icon={<Briefcase size={26} />} title={t('market.clients.emptyTitle')}>
+          {t('market.clients.emptyText')}{' '}
+          <Link to="/directory">{t('market.clients.emptyBrowse')}</Link>
+          {t('market.clients.emptyOrCheck')}
+          <Link to="/inbox">{t('market.clients.emptyInbox')}</Link>
+          {t('market.clients.emptyEnd')}
         </EmptyState>
       )}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -59,21 +64,25 @@ export function ClientsPage() {
                 <p className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
                   <CalendarRange size={14} className="shrink-0" />
                   <span>
-                    {c.access?.periodStart && formatDate(c.access.periodStart)} to{' '}
-                    {c.access?.periodEnd && formatDate(c.access.periodEnd)}
+                    {t('market.clients.period', {
+                      start: c.access?.periodStart ? formatDate(c.access.periodStart) : '',
+                      end: c.access?.periodEnd ? formatDate(c.access.periodEnd) : '',
+                    })}
                   </span>
                 </p>
               </div>
             </div>
             <div className="bg-slate-50 rounded-xl p-4 mb-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">This month</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{t('market.clients.thisMonth')}</p>
               <p className="text-2xl font-bold text-slate-900 tabular-nums mt-1">{formatBrl(c.currentMonthBrl ?? '0')}</p>
               <p className="text-sm text-slate-500">{formatUsdc(c.currentMonthUsdc ?? '0')} USDC</p>
             </div>
             {(c.unmatchedCount ?? 0) > 0 && (
               <div className="flex items-center gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
                 <AlertTriangle size={16} className="shrink-0" />
-                {c.unmatchedCount} unmatched payment{c.unmatchedCount === 1 ? '' : 's'} need attention
+                {c.unmatchedCount === 1
+                  ? t('market.clients.unmatchedOne')
+                  : t('market.clients.unmatchedMany', { count: c.unmatchedCount ?? 0 })}
               </div>
             )}
             <ButtonLink
@@ -82,7 +91,7 @@ export function ClientsPage() {
               className="w-full mt-auto"
               icon={<BarChart3 size={18} />}
             >
-              Open report
+              {t('market.clients.openReport')}
             </ButtonLink>
           </div>
         ))}
