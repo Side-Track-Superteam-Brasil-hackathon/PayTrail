@@ -3,8 +3,9 @@ import { cx } from './cx';
 
 /** Input look without width/padding, for inputs that need their own sizing. */
 export const inputBase =
-  'min-w-0 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 ' +
-  'focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all disabled:bg-slate-50';
+  // Texto claro: no tema escuro, bg-white é sobrescrito para um fundo escuro (styles.css).
+  'min-w-0 rounded-xl border border-slate-300 bg-white text-slate-100 placeholder:text-slate-400 ' +
+  'focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all disabled:opacity-60 [&>option]:bg-[#11131a]';
 
 export const inputClass = `${inputBase} w-full px-4 py-2.5`;
 
