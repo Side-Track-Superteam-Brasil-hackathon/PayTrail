@@ -183,7 +183,7 @@ function MockBanner() {
   const { t } = useI18n();
   if (!__API_MOCK__) return null;
   return (
-    <div role="status" className="bg-amber-400 text-amber-950 text-xs sm:text-sm font-medium text-center px-4 py-2">
+    <div role="status" className="fixed top-0 inset-x-0 z-50 bg-amber-400 text-amber-950 text-xs sm:text-sm font-medium text-center px-4 py-2">
       {t('mock.banner')}
     </div>
   );
@@ -206,9 +206,9 @@ function AppShell({ children }: { children: ReactNode }) {
   }, [open]);
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-slate-50">
+    <>
       <MockBanner />
-      <div className="flex flex-1 min-h-0">
+      <div className="flex h-[100dvh] bg-slate-50">
         {/* Desktop sidebar */}
         <aside className="hidden md:flex w-64 shrink-0 bg-white border-r border-slate-200 flex-col">
           <SidebarContent />
@@ -252,7 +252,7 @@ function AppShell({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -298,10 +298,10 @@ export function App() {
 
   if (!user || isBare(pathname)) {
     return (
-      <div className="min-h-[100dvh] bg-slate-50">
+      <>
         <MockBanner />
-        {routes}
-      </div>
+        <div className="min-h-[100dvh] bg-slate-50">{routes}</div>
+      </>
     );
   }
   return <AppShell>{routes}</AppShell>;

@@ -35,18 +35,15 @@ export function LandingPage() {
           <LanguageSwitcher />
         </nav>
 
-        <div className="flex items-center gap-2 md:hidden">
-          <LanguageSwitcher />
-          <button
-            type="button"
-            className="rounded-lg p-2 text-white/75"
-            onClick={() => setMenuOpen((open) => !open)}
-            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
-            aria-expanded={menuOpen}
-          >
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="rounded-lg p-2 text-white/75 md:hidden"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </header>
 
       {menuOpen && (
@@ -56,6 +53,7 @@ export function LandingPage() {
             <a href="#features" className="rounded-lg px-3 py-2.5 text-white/75 hover:bg-white/10 hover:text-white" onClick={() => setMenuOpen(false)}>{t('landing.features')}</a>
             <Link to="/login" className="rounded-lg px-3 py-2.5 text-white/75 hover:bg-white/10 hover:text-white">{t('landing.login')}</Link>
             <Link to="/register" className="mt-2 rounded-xl bg-[#ff8a4c] px-3 py-2.5 text-center font-medium text-white transition hover:bg-[#ffa06e]">{t('landing.getStarted')}</Link>
+            <LanguageSwitcher className="mt-2 self-center" />
           </div>
         </nav>
       )}
