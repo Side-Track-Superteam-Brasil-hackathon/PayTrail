@@ -11,6 +11,7 @@ import { Field, inputClass } from '../components/Field';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useI18n } from '../i18n/I18nProvider';
+import { useTheme } from '../theme/ThemeContext';
 
 interface RoleCardProps {
   selected: boolean;
@@ -81,6 +82,7 @@ function PasswordChecklist({ password }: { password: string }) {
 export function RegisterPage() {
   const { register } = useAuth();
   const { t } = useI18n();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'FREELANCER' as Role });
   const [confirm, setConfirm] = useState('');
@@ -120,6 +122,7 @@ export function RegisterPage() {
 
   const accountant = form.role === 'ACCOUNTANT';
   const passwordType = showPassword ? 'text' : 'password';
+  const isLight = theme === 'light';
 
   return (
     <div className="auth-page min-h-[100dvh] flex items-center justify-center p-4 py-10">
@@ -129,9 +132,9 @@ export function RegisterPage() {
       </div>
       <div className="max-w-3xl w-full">
         <div className="text-center mb-8 sm:mb-10">
-          <p className="text-[#ff8a4c] font-bold text-xl tracking-tight mb-3">PayTrail</p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">{t('register.title')}</h2>
-          <p className="text-white/70 mt-2">{t('register.subtitle')}</p>
+          <p className={`font-bold text-xl tracking-tight mb-3 ${isLight ? 'text-[#001d39]' : 'text-[#ff8a4c]'}`}>PayTrail</p>
+          <h2 className={`text-2xl sm:text-3xl font-bold ${isLight ? 'text-[#0a4174]' : 'text-white'}`}>{t('register.title')}</h2>
+          <p className={`mt-2 ${isLight ? 'text-[#49769f]' : 'text-white/70'}`}>{t('register.subtitle')}</p>
         </div>
 
         <form onSubmit={onSubmit}>
