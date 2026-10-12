@@ -132,7 +132,7 @@ export function RegisterPage() {
       </div>
       <div className="max-w-3xl w-full">
         <div className="text-center mb-8 sm:mb-10">
-          <p className="text-[#001d39] font-bold text-xl tracking-tight mb-3">PayTrail</p>
+          <p className={`font-bold text-xl tracking-tight mb-3 ${isLight ? 'text-[#001d39]' : 'text-[#ff8a4c]'}`}>PayTrail</p>
           <h2 className={`text-2xl sm:text-3xl font-bold ${isLight ? 'text-[#0a4174]' : 'text-white'}`}>{t('register.title')}</h2>
           <p className={`mt-2 ${isLight ? 'text-[#49769f]' : 'text-white/70'}`}>{t('register.subtitle')}</p>
         </div>

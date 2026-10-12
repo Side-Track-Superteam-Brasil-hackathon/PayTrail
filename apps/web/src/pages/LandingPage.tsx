@@ -107,7 +107,7 @@ export function LandingPage() {
                 <span className={`h-1.5 w-1.5 rounded-full ${badgeDot}`} />
                 {t('landing.badge')}
               </div>
-              <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-[-0.04em] text-[#001d39] sm:text-6xl lg:text-7xl">
+              <h1 className={`max-w-3xl text-5xl font-semibold leading-[1.05] tracking-[-0.04em] ${isLight ? 'text-[#001d39]' : 'text-white'} sm:text-6xl lg:text-7xl`}>
                 {t('landing.titleStart')} <span className={titleHighlight}>{t('landing.titleHighlight')}</span>
               </h1>
               <p className={`mt-7 max-w-xl text-lg leading-8 sm:text-xl ${bodyMuted}`}>
@@ -133,24 +133,24 @@ export function LandingPage() {
                 <div className={`flex items-center justify-between border-b pb-5 ${isLight ? 'border-[#0a4174]/10' : 'border-white/10'}`}>
                   <div>
                     <p className={`text-xs ${tinyMuted}`}>{t('landing.cardKicker')}</p>
-                    <p className="mt-1 text-lg font-medium text-[#001d39]">{t('landing.cardTitle')}</p>
+                    <p className={`mt-1 text-lg font-medium ${isLight ? 'text-[#001d39]' : 'text-white'}`}>{t('landing.cardTitle')}</p>
                   </div>
                   <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${chipClasses}`}>USDC</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 py-7">
                   <div className={`rounded-xl p-3.5 ${cardSubtle}`}>
                     <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${cardIcon}`}><Link2 size={17} /></div>
-                    <p className="mt-5 text-xl font-semibold text-[#001d39]">{t('landing.stat1Value')}</p>
+                    <p className={`mt-5 text-xl font-semibold ${isLight ? 'text-[#001d39]' : 'text-white'}`}>{t('landing.stat1Value')}</p>
                     <p className={`mt-1 text-xs leading-5 ${tinyMuted}`}>{t('landing.stat1Text')}</p>
                   </div>
                   <div className={`rounded-xl p-3.5 ${cardSubtle}`}>
                     <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${cardIcon}`}><BarChart3 size={17} /></div>
-                    <p className="mt-5 text-xl font-semibold text-[#001d39]">USDC <span className="text-sm text-[#0a4174]/60">→ BRL</span></p>
+                    <p className={`mt-5 text-xl font-semibold ${isLight ? 'text-[#001d39]' : 'text-white'}`}>USDC <span className={isLight ? 'text-sm text-[#0a4174]/60' : 'text-sm text-white/60'}>→ BRL</span></p>
                     <p className={`mt-1 text-xs leading-5 ${tinyMuted}`}>{t('landing.stat2Text')}</p>
                   </div>
                   <div className={`rounded-xl p-3.5 ${cardSubtle}`}>
                     <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${cardIcon}`}><ShieldCheck size={17} /></div>
-                    <p className="mt-5 text-xl font-semibold text-[#001d39]">{t('landing.stat3Value')}</p>
+                    <p className={`mt-5 text-xl font-semibold ${isLight ? 'text-[#001d39]' : 'text-white'}`}>{t('landing.stat3Value')}</p>
                     <p className={`mt-1 text-xs leading-5 ${tinyMuted}`}>{t('landing.stat3Text')}</p>
                   </div>
                 </div>
