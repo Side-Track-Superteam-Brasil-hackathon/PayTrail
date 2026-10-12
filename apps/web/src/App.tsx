@@ -31,6 +31,7 @@ import { ConversationPage } from './pages/market/ConversationPage';
 import { DirectoryPage } from './pages/market/DirectoryPage';
 import { InboxPage } from './pages/market/InboxPage';
 import { MyAccountantsPage } from './pages/market/MyAccountantsPage';
+import { ThemeToggle } from './components/ThemeToggle';
 
 interface NavItem {
   to: string;
@@ -172,7 +173,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <LogOut size={16} /> {t('nav.logout')}
           </button>
         </div>
-        <LanguageSwitcher className="mt-3 w-full justify-center" />
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <ThemeToggle />
+          <LanguageSwitcher />
+        </div>
       </div>
     </div>
   );
@@ -236,15 +240,18 @@ function AppShell({ children }: { children: ReactNode }) {
           {/* Mobile header */}
           <header className="md:hidden h-16 shrink-0 flex items-center justify-between px-4 bg-white border-b border-slate-200">
             <Link to="/" className="text-xl font-bold text-indigo-600">PayTrail</Link>
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="p-2 -mr-2 text-slate-600 hover:text-slate-900 rounded-lg"
-              aria-label={t('nav.openMenu')}
-              aria-expanded={open}
-            >
-              <Menu size={24} />
-            </button>
+            <div className="flex items-center gap-1">
+              <ThemeToggle compact />
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                aria-label={t('nav.openMenu')}
+                aria-expanded={open}
+              >
+                <Menu size={24} />
+              </button>
+            </div>
           </header>
 
           <main className="flex-1 overflow-y-auto">

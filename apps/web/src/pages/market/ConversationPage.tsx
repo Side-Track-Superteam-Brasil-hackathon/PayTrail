@@ -231,7 +231,7 @@ export function ConversationPage() {
                 className={cx(
                   'px-4 py-2.5 rounded-2xl shadow-sm max-w-[85%] sm:max-w-[75%] whitespace-pre-wrap [overflow-wrap:anywhere]',
                   mine
-                    ? 'bg-indigo-600 text-[#1b100b] rounded-tr-sm'
+                    ? 'bg-indigo-600 text-white dark:text-[#1b100b] rounded-tr-sm'
                     : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm',
                 )}
               >
@@ -263,7 +263,7 @@ export function ConversationPage() {
             disabled={sending || !text.trim()}
             onClick={() => void send()}
             aria-label={t('market.conversation.send')}
-            className="bg-indigo-600 hover:bg-indigo-700 text-[#1b100b] p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white dark:text-[#1b100b] p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             <Send size={20} />
           </button>

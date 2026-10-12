@@ -25,6 +25,12 @@ export const en = {
   'lang.en': 'English',
   'lang.pt': 'Português',
 
+  // Tema claro/escuro
+  'theme.dark': 'Dark mode',
+  'theme.light': 'Light mode',
+  'theme.switchToDark': 'Switch to dark mode',
+  'theme.switchToLight': 'Switch to light mode',
+
   // Modo mock
   'mock.banner': 'Mock mode: the API is simulated from the OpenAPI spec. Nothing is saved and texts show placeholder values like "string".',
 
@@ -116,6 +122,11 @@ export const pt: Messages<typeof en> = {
   'lang.label': 'Idioma',
   'lang.en': 'English',
   'lang.pt': 'Português',
+
+  'theme.dark': 'Modo escuro',
+  'theme.light': 'Modo claro',
+  'theme.switchToDark': 'Mudar para o modo escuro',
+  'theme.switchToLight': 'Mudar para o modo claro',
 
   'mock.banner': 'Modo mock: a API é simulada a partir da spec OpenAPI. Nada é salvo e os textos mostram valores de exemplo como "string".',
 

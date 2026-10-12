@@ -9,6 +9,7 @@ import { Button } from '../components/Button';
 import { cx } from '../components/cx';
 import { Field, inputClass } from '../components/Field';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { useI18n } from '../i18n/I18nProvider';
 
 interface RoleCardProps {
@@ -122,14 +123,15 @@ export function RegisterPage() {
 
   return (
     <div className="auth-page min-h-[100dvh] flex items-center justify-center p-4 py-10">
-      <div className="absolute top-4 right-4">
+      <div className="fixed right-4 top-4 flex items-center gap-2">
+        <ThemeToggle compact darkSurface />
         <LanguageSwitcher />
       </div>
       <div className="max-w-3xl w-full">
         <div className="text-center mb-8 sm:mb-10">
-          <p className="text-indigo-600 font-bold text-xl tracking-tight mb-3">PayTrail</p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{t('register.title')}</h2>
-          <p className="text-slate-500 mt-2">{t('register.subtitle')}</p>
+          <p className="text-[#ff8a4c] font-bold text-xl tracking-tight mb-3">PayTrail</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">{t('register.title')}</h2>
+          <p className="text-white/70 mt-2">{t('register.subtitle')}</p>
         </div>
 
         <form onSubmit={onSubmit}>
