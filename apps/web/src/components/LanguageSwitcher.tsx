@@ -27,7 +27,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           onClick={() => setLang(o.lang)}
           className={cx(
             'px-2 py-1 rounded-lg font-semibold transition-colors',
-            lang === o.lang ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100',
+            lang === o.lang ? 'bg-indigo-600 text-[#1b100b]' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100',
           )}
         >
           {o.short}
