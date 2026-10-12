@@ -130,7 +130,7 @@ export function ProfilePage() {
           )}
 
           {isFreelancer && (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5 space-y-5">
+            <div className="rounded-2xl border border-slate-200 bg-white/5 p-4 sm:p-5 space-y-5">
               <h3 className="flex items-center gap-2 font-semibold text-slate-900">
                 <Wallet size={18} className="text-indigo-600" /> {t('profile.payments')}
               </h3>
