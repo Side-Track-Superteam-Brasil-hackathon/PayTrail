@@ -256,9 +256,18 @@ Veja a lista diretamente no terminal:
 make help
 ```
 
-Os alvos mais usados são `install`, `dev`, `dev-no-web`, `db-up`, `api-run`,
-`web-dev`, `watcher-dev`, `test`, `build`, `e2e` e `e2e-smoke`. Parâmetros dos
-scripts são passados por `ARGS`, por exemplo `make dev ARGS="--reset"`.
+O Makefile possui somente os fluxos operacionais principais:
+
+```bash
+make dev       # stack real completa em localnet
+make mock      # frontend + mock OpenAPI
+make db-logs   # logs do PostgreSQL
+make restart   # remove containers e sobe a stack real novamente
+make down      # remove containers, volumes e órfãos
+```
+
+Use `ARGS` para passar opções ao modo real, por exemplo `make dev ARGS="--reset"`.
+O alvo `mock` encerra o Prism e o Vite quando você pressiona `Ctrl+C`.
 
 ## 10. Problemas comuns
 
