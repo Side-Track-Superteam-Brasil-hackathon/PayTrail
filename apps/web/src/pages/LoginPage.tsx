@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { Alert } from '../components/Alert';
 import { Button } from '../components/Button';
 import { Field, inputClass } from '../components/Field';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -29,6 +30,7 @@ export function LoginPage() {
 
   return (
     <div className="auth-page min-h-[100dvh] flex items-center justify-center p-4">
+      <div className="fixed right-4 top-4"><ThemeToggle compact darkSurface /></div>
       <div className="auth-panel bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">PayTrail</h1>

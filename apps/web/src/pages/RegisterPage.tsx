@@ -7,6 +7,7 @@ import { Alert } from '../components/Alert';
 import { Button } from '../components/Button';
 import { cx } from '../components/cx';
 import { Field, inputClass } from '../components/Field';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 interface RoleCardProps {
   selected: boolean;
@@ -84,6 +85,7 @@ export function RegisterPage() {
 
   return (
     <div className="auth-page min-h-[100dvh] flex items-center justify-center p-4 py-10">
+      <div className="fixed right-4 top-4"><ThemeToggle compact darkSurface /></div>
       <div className="max-w-3xl w-full">
         <div className="text-center mb-8 sm:mb-10">
           <p className="text-indigo-600 font-bold text-xl tracking-tight mb-3">PayTrail</p>

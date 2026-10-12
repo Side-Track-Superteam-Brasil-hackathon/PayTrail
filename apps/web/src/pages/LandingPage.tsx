@@ -1,6 +1,7 @@
 import { ArrowRight, BarChart3, Check, FileCheck2, Link2, Menu, ShieldCheck, WalletCards, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 const FEATURES = [
   {
@@ -33,10 +34,11 @@ export function LandingPage() {
           <span className="text-xl font-semibold tracking-tight">PayTrail</span>
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm text-white/65 md:flex" aria-label="Landing page">
+        <nav className="hidden items-center gap-5 text-sm text-white/65 md:flex" aria-label="Landing page">
           <a href="#how-it-works" className="transition-colors hover:text-white">How it works</a>
           <a href="#features" className="transition-colors hover:text-white">Features</a>
           <Link to="/login" className="transition-colors hover:text-white">Log in</Link>
+          <ThemeToggle compact darkSurface />
           <Link to="/register" className="rounded-xl bg-[#ff8a4c] px-4 py-2.5 font-medium text-white transition hover:bg-[#ffa06e]">
             Get started
           </Link>
@@ -60,6 +62,7 @@ export function LandingPage() {
             <a href="#features" className="rounded-lg px-3 py-2.5 text-white/75 hover:bg-white/10 hover:text-white" onClick={() => setMenuOpen(false)}>Features</a>
             <Link to="/login" className="rounded-lg px-3 py-2.5 text-white/75 hover:bg-white/10 hover:text-white">Log in</Link>
             <Link to="/register" className="mt-2 rounded-xl bg-[#ff8a4c] px-3 py-2.5 text-center font-medium text-white transition hover:bg-[#ffa06e]">Get started</Link>
+            <div className="mt-2 flex justify-end"><ThemeToggle compact darkSurface /></div>
           </div>
         </nav>
       )}
