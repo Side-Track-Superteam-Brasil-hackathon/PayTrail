@@ -28,8 +28,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center p-4">
-      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 w-full max-w-md">
+    <div className="auth-page min-h-[100dvh] flex items-center justify-center p-4">
+      <div className="auth-panel bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">PayTrail</h1>
           <p className="text-slate-500 mt-2">Connecting global services to local compliance.</p>

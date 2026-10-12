@@ -83,7 +83,7 @@ export function RegisterPage() {
   const accountant = form.role === 'ACCOUNTANT';
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center p-4 py-10">
+    <div className="auth-page min-h-[100dvh] flex items-center justify-center p-4 py-10">
       <div className="max-w-3xl w-full">
         <div className="text-center mb-8 sm:mb-10">
           <p className="text-indigo-600 font-bold text-xl tracking-tight mb-3">PayTrail</p>
@@ -111,7 +111,7 @@ export function RegisterPage() {
             />
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 mt-6 max-w-md mx-auto space-y-4">
+          <div className="auth-panel bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 mt-6 max-w-md mx-auto space-y-4">
             <h3 className="font-semibold text-slate-900">Create your account</h3>
             <Field label="Name">
               <input className={inputClass} autoComplete="name" value={form.name} onChange={set('name')} required />
