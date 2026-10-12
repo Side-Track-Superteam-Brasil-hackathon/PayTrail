@@ -1,6 +1,18 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api, getToken, setToken, type AuthResponse, type Role, type User } from '../api/client';
 
+const DEMO_USER: User = {
+  id: 'demo-user',
+  email: 'demo@paytrail.app',
+  role: 'FREELANCER',
+  name: 'Ana Costa',
+  city: 'São Paulo',
+  bio: 'Independent designer and operations lead.',
+  specialties: ['Brand design', 'Operations', 'Accounting'],
+  solanaWallet: '3hRkQ2r9cZQeW2y4A7qRz7gNnVv7gmn7Q4U4Q2y1Qj8V',
+  fxRule: 'CARNE_LEAO',
+};
+
 interface AuthState {
   user: User | null;
   loading: boolean;
@@ -18,6 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(Boolean(getToken()));
 
   useEffect(() => {
+    const demoMode = new URLSearchParams(window.location.search).get('demo');
+    if (demoMode === 'dashboard') {
+      setUser(DEMO_USER);
+      setLoading(false);
+      return;
+    }
+
     if (!getToken()) return;
     api<User>('/me')
       .then(setUser)

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
-  AlertTriangle, BarChart3, Briefcase, Compass, FileText, LogOut, Menu, MessageSquare, Search, Settings,
+  AlertTriangle, BarChart3, Briefcase, Compass, FileText, Home as HomeIcon, LogOut, Menu, MessageSquare, Search, Settings,
   ShieldCheck, X, type LucideIcon,
 } from 'lucide-react';
 import type { Role } from './api/client';
@@ -12,6 +12,7 @@ import { cx } from './components/cx';
 import { EmptyState } from './components/EmptyState';
 import { Loading } from './components/Loading';
 import { LoginPage } from './pages/LoginPage';
+import { LandingPage } from './pages/LandingPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { InvoiceDetailPage } from './pages/finance/InvoiceDetailPage';
 import { InvoicesPage } from './pages/finance/InvoicesPage';
@@ -21,6 +22,7 @@ import { ProfilePage } from './pages/finance/ProfilePage';
 import { ReportPage } from './pages/finance/ReportPage';
 import { UnmatchedPage } from './pages/finance/UnmatchedPage';
 import { VerifyPage } from './pages/finance/VerifyPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { ClientsPage } from './pages/market/ClientsPage';
 import { ConversationPage } from './pages/market/ConversationPage';
 import { DirectoryPage } from './pages/market/DirectoryPage';
@@ -35,6 +37,7 @@ interface NavItem {
 
 const NAV: Record<Role, NavItem[]> = {
   FREELANCER: [
+    { to: '/dashboard', label: 'Overview', icon: HomeIcon },
     { to: '/invoices', label: 'Invoices', icon: FileText },
     { to: '/payments/unmatched', label: 'Unmatched', icon: AlertTriangle },
     { to: '/reports', label: 'Monthly report', icon: BarChart3 },
@@ -43,6 +46,7 @@ const NAV: Record<Role, NavItem[]> = {
     { to: '/accountants', label: 'My accountants', icon: ShieldCheck },
   ],
   ACCOUNTANT: [
+    { to: '/dashboard', label: 'Overview', icon: HomeIcon },
     { to: '/clients', label: 'My clients', icon: Briefcase },
     { to: '/directory', label: 'Find clients', icon: Search },
     { to: '/inbox', label: 'Messages', icon: MessageSquare },
@@ -71,8 +75,8 @@ function Protected({ role, children }: { role?: Role; children: ReactNode }) {
 function Home() {
   const { user, loading } = useAuth();
   if (loading) return <Loading />;
-  if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={user.role === 'FREELANCER' ? '/invoices' : '/clients'} replace />;
+  if (!user) return <LandingPage />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function NotFound() {
@@ -233,6 +237,7 @@ export function App() {
   const routes = (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
