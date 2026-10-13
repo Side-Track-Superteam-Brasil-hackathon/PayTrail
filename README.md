@@ -32,7 +32,9 @@ cd apps/watcher && npm install && npm run dev
 cd apps/web && npm install && npm run dev  # open http://localhost:5173
 ```
 
-On Windows with WSL (no Docker), `bash scripts/dev.sh` starts everything, including a local Solana validator.
+On Windows with WSL (no Docker), `make up` (or `bash scripts/dev.sh`) starts everything against the **Solana devnet**; add `--localnet` (`make up ARGS="--localnet"`) to use a local validator with auto-funded test wallets instead.
+
+Devnet guides (in Portuguese) in [docs/devnet](docs/devnet): [creating and funding a devnet wallet](docs/devnet/01-carteira-devnet.md), [test plan](docs/devnet/02-roteiro-de-testes.md) and [demo video script](docs/devnet/03-roteiro-video.md).
 
 ### Mock mode (front-end only)
 

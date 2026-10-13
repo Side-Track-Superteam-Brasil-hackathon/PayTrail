@@ -154,7 +154,7 @@ start_api() {
   start_bg api "$LOG_DIR/api.log" env \
     DB_URL="jdbc:postgresql://localhost:5432/$db" DB_USER=paytrail DB_PASSWORD= \
     JWT_SECRET="$JWT_SECRET" INTERNAL_SECRET="$INTERNAL_SECRET" \
-    SOLANA_USDC_MINT="$SOLANA_USDC_MINT" SOLANA_CLUSTER=custom \
+    SOLANA_USDC_MINT="$SOLANA_USDC_MINT" SOLANA_CLUSTER="${SOLANA_CLUSTER:-custom}" \
     PUBLIC_WEB_URL="http://localhost:$WEB_PORT" \
     SEED_PASSWORD="${SEED_PASSWORD:-}" SEED_ANA_SOLANA_WALLET="${SEED_ANA_SOLANA_WALLET:-}" \
     java "${args[@]}"
