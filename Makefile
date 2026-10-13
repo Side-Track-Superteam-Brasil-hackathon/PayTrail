@@ -34,7 +34,7 @@ up: ## Sobe a aplicação real em background e mostra o progresso inicial
 			tail -n 40 "$(PAYTRAIL_LOG_FILE)" >&2; rm -f "$(PAYTRAIL_PID_FILE)"; exit 1; \
 		fi; \
 		progress_rewind "$$rows"; \
-		validator=$$(grep -q 'solana-test-validator.*ok' "$(PAYTRAIL_LOG_FILE)" && echo done || echo wait); \
+		validator=$$(grep -qE 'solana-test-validator.*ok|solana devnet.*ok' "$(PAYTRAIL_LOG_FILE)" && echo done || echo wait); \
 		postgres=$$(grep -q 'postgres ok' "$(PAYTRAIL_LOG_FILE)" && echo done || echo wait); \
 		api=$$(grep -q 'API em .* ok' "$(PAYTRAIL_LOG_FILE)" && echo done || echo wait); \
 		watcher=$$(grep -q 'watcher iniciado' "$(PAYTRAIL_LOG_FILE)" && echo done || echo wait); \

@@ -82,9 +82,11 @@ bash scripts/e2e.sh --watcher-smoke                   # só validador + watcher 
 cd tools/e2e && npm ci && npx tsx src/run.ts --api http://127.0.0.1:8080/api --rpc http://127.0.0.1:8899 [--only A1] [--timeout 60]
 cd tools/e2e && npm run typecheck
 
-# Stack de demo: validador (ledger persistente) + API perfil dev (DevSeeder, Ana com a carteira ~/.paytrail/keys/ana.json)
-# + watcher + web em http://localhost:5173. Imprime mint, carteiras e comandos. --reset zera ledger e banco.
-bash scripts/dev.sh [--reset] [--no-web] [--skip-build]
+# Stack de demo (também `make up [ARGS="..."]`): API perfil dev (DevSeeder) + watcher + web em http://localhost:5173.
+# Padrão: Solana DEVNET (USDC da Circle, banco paytrail_devnet, RPC de SOLANA_RPC_URL ou o público; carteira da Ana de
+# SEED_ANA_SOLANA_WALLET no .env ou ~/.paytrail/keys/ana.json). Fundos da devnet são manuais: docs/devnet/01-carteira-devnet.md.
+# --localnet: validador local + mint de teste + carteiras financiadas (banco paytrail). --reset zera o banco (e o ledger no localnet).
+bash scripts/dev.sh [--localnet] [--reset] [--no-web] [--skip-build]
 
 # CLIs da demo (usam as dependências de tools/e2e; localnet ou devnet via --rpc/--api)
 cd tools/e2e
