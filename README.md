@@ -4,6 +4,14 @@ USDC invoicing and reconciliation for Brazilian freelancers: every payment match
 
 Built on Solana for the Superteam Brasil side track of the Colosseum hackathon.
 
+## Videos
+
+| Video | Link |
+|---|---|
+| Demo (EN) | [youtu.be/tq13R7wLz8w](https://youtu.be/tq13R7wLz8w) |
+| Pitch (EN) | [youtu.be/t6qj2DqgnQU](https://youtu.be/t6qj2DqgnQU) |
+| Pitch (PT-BR) | [youtube.com/watch?v=CsF9KFQE5N8](https://www.youtube.com/watch?v=CsF9KFQE5N8) |
+
 ## Specs
 
 This project follows spec-driven development. Start here:
