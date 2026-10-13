@@ -19,3 +19,9 @@ dist/
 *.iml
 .DS_Store
 Thumbs.db
+
+# Instruções locais do assistente de IA e materiais gerados para o pitch (não versionar)
+CLAUDE.md
+docs/*.pdf
+docs/video/
+docs/brand/

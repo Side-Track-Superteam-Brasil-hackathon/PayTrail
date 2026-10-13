@@ -26,7 +26,7 @@ This project follows spec-driven development. Start here:
 | [05-aceite](specs/05-aceite.md) | Acceptance scenarios and demo script |
 | [06-marketplace](specs/06-marketplace.md) | Directory, inbox, proposals, accountant access |
 
-See [CLAUDE.md](CLAUDE.md) for stack, repo layout and conventions.
+See [docs/EXECUCAO.md](docs/EXECUCAO.md) (in Portuguese) for setup, stack and how to run and test the project.
 
 ## Running locally
 
