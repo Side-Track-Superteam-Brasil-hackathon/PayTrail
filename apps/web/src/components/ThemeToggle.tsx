@@ -20,7 +20,7 @@ export function ThemeToggle({ compact = false, darkSurface = false }: { compact?
     <button
       type="button"
       onClick={toggleTheme}
-      className={compact ? compactClasses : 'inline-flex items-center justify-center gap-2 rounded-xl border border-[#0a4174]/15 bg-[#001d39] px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a4174]'}
+      className={compact ? compactClasses       : 'inline-flex items-center justify-center gap-2 rounded-xl border border-[#0a4174]/15 bg-[#001d39] px-3 py-2 text-sm font-medium text-white whitespace-nowrap shadow-sm transition-colors hover:bg-[#0a4174]'}
       aria-label={label}
       title={label}
     >

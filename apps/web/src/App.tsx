@@ -149,7 +149,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <p className="text-xs text-slate-500 truncate">{user.email}</p>
           </div>
         </div>
-        <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="mt-2 flex items-center justify-between gap-2">
           <NavLink
             to="/profile"
             onClick={onNavigate}

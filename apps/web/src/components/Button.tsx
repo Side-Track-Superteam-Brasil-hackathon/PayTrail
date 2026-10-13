@@ -8,7 +8,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 const VARIANT: Record<ButtonVariant, string> = {
   primary: 'bg-slate-900 text-white hover:bg-[#3a1d15] hover:text-white shadow-sm',
   // Laranja da página inicial (LandingPage)
-  orange: 'bg-[#ff8a4c] text-white hover:bg-[#ffa06e] shadow-sm',
+  orange: 'bg-[#ff8a4c] text-[#1b100b] hover:bg-[#ffa06e] shadow-sm',
   accent: 'bg-indigo-600 text-white dark:text-[#1b100b] hover:bg-indigo-700 shadow-sm',
   emerald: 'bg-emerald-600 text-white dark:text-[#1b100b] hover:bg-emerald-700 shadow-sm',
   secondary: 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm',

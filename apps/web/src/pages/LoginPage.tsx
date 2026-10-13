@@ -69,7 +69,7 @@ export function LoginPage() {
             />
           </Field>
           {error && <Alert>{error}</Alert>}
-          <Button type="submit" variant="orange" disabled={busy} className="w-full mt-2">
+          <Button type="submit" variant="accent" disabled={busy} className="w-full mt-2">
             {busy ? t('login.submitting') : t('login.submit')}
           </Button>
         </form>
