@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPage } from './LoginPage';
 import { ThemeProvider } from '../theme/ThemeContext';
+import { I18nProvider } from '../i18n/I18nProvider';
 
 const login = vi.fn();
 const navigate = vi.fn();
@@ -25,7 +26,7 @@ describe('LoginPage', () => {
   it('submits credentials and navigates home after login', async () => {
     login.mockResolvedValue(undefined);
     render(
-      <ThemeProvider><MemoryRouter><LoginPage /></MemoryRouter></ThemeProvider>,
+      <I18nProvider><ThemeProvider><MemoryRouter><LoginPage /></MemoryRouter></ThemeProvider></I18nProvider>,
     );
 
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ana@example.com' } });
@@ -39,7 +40,7 @@ describe('LoginPage', () => {
   it('shows the API error and restores the submit button after failure', async () => {
     login.mockRejectedValue(new Error('Invalid credentials'));
     render(
-      <ThemeProvider><MemoryRouter><LoginPage /></MemoryRouter></ThemeProvider>,
+      <I18nProvider><ThemeProvider><MemoryRouter><LoginPage /></MemoryRouter></ThemeProvider></I18nProvider>,
     );
 
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ana@example.com' } });

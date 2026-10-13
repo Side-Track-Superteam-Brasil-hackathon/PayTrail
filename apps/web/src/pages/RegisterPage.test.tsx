@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RegisterPage } from './RegisterPage';
 import { ThemeProvider } from '../theme/ThemeContext';
+import { I18nProvider } from '../i18n/I18nProvider';
 
 const register = vi.fn();
 const navigate = vi.fn();
@@ -26,7 +27,7 @@ describe('RegisterPage', () => {
 
   it('defaults to freelancer and allows switching to accountant', () => {
     render(
-      <ThemeProvider><MemoryRouter><RegisterPage /></MemoryRouter></ThemeProvider>,
+      <I18nProvider><ThemeProvider><MemoryRouter><RegisterPage /></MemoryRouter></ThemeProvider></I18nProvider>,
     );
 
     const freelancer = screen.getByRole('radio', { name: /service provider/i });
@@ -43,20 +44,21 @@ describe('RegisterPage', () => {
   it('sends the selected role with the account data', async () => {
     const user = userEvent.setup();
     render(
-      <ThemeProvider><MemoryRouter><RegisterPage /></MemoryRouter></ThemeProvider>,
+      <I18nProvider><ThemeProvider><MemoryRouter><RegisterPage /></MemoryRouter></ThemeProvider></I18nProvider>,
     );
 
     await user.click(screen.getByRole('radio', { name: /i'm an accountant/i }));
     await user.type(screen.getByLabelText('Name'), 'Carlos Silva');
     await user.type(screen.getByLabelText('Email'), 'carlos@example.com');
-    await user.type(screen.getByLabelText(/Password/), 'password123');
+    await user.type(screen.getByLabelText(/^Password$/), 'Password123!');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!');
     await user.click(screen.getByRole('button', { name: /create accountant account/i }));
 
     await vi.waitFor(() =>
       expect(register).toHaveBeenCalledWith({
         name: 'Carlos Silva',
         email: 'carlos@example.com',
-        password: 'password123',
+        password: 'Password123!',
         role: 'ACCOUNTANT',
       }),
     );
